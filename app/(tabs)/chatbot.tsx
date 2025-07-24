@@ -19,7 +19,7 @@ const ChatbotTab = () => {
   const flatListRef = useRef<FlatList<any> | null>(null);
 
   //abc
-  const bearerToken =""; // Replace with your bearer Token
+  const bearerToken = "AIzaSyD6cJhxDKJSV90zYjPqq46FgFTQrSViLhU";
   const apiUrl =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
@@ -35,7 +35,7 @@ const ChatbotTab = () => {
       const config = {
         headers: {
           "Content-Type": "application/json",
-          "X-goog-api-key":`${bearerToken}`
+          "X-goog-api-key": `${bearerToken}`,
         },
       };
 
