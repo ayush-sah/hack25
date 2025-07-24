@@ -18,15 +18,8 @@ const ChatbotTab = () => {
   const [isLoading, setLoading] = useState(false);
   const flatListRef = useRef<FlatList<any> | null>(null);
 
-  // Scroll to bottom when chat updates
-  React.useEffect(() => {
-    if (flatListRef.current && chat.length > 0) {
-      flatListRef.current.scrollToEnd({ animated: true });
-    }
-  }, [chat]);
-
   //abc
-  const bearerToken = "AIzaSyD6cJhxDKJSV90zYjPqq46FgFTQrSViLhU";
+  const bearerToken =""; // Replace with your bearer Token
   const apiUrl =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
@@ -42,7 +35,7 @@ const ChatbotTab = () => {
       const config = {
         headers: {
           "Content-Type": "application/json",
-          "X-goog-api-key": `${bearerToken}`,
+          "X-goog-api-key":`${bearerToken}`
         },
       };
 
@@ -104,16 +97,7 @@ const ChatbotTab = () => {
         ]}
       >
         <Text style={isUser ? styles.userMessage : styles.botMessage}>
-          {isUser
-            ? item.text
-            : item.text.split(/(\*[^*]+\*)/g).map((part, idx) => {
-                if (/^\*[^*]+\*$/.test(part)) {
-                  return (
-                    <Text key={idx} style={{ fontWeight: 'bold', color: '#008080' }}>{part.slice(1, -1)}</Text>
-                  );
-                }
-                return part;
-              })}
+          {item.text}
         </Text>
       </View>
     );
@@ -145,11 +129,6 @@ const ChatbotTab = () => {
               <ActivityIndicator size="large" color={theme.colors.primary} />
             ) : null
           }
-          onContentSizeChange={() => {
-            if (flatListRef.current) {
-              flatListRef.current.scrollToEnd({ animated: true });
-            }
-          }}
         />
         <View style={styles.inputContainer}>
           <TextInput
