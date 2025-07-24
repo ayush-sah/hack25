@@ -15,7 +15,6 @@ import {
 import axios from "axios";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemeProvider } from "@react-navigation/native";
-import Config from "react-native-config";
 
 const ChatbotTab = () => {
   const [message, setMessage] = useState("");
@@ -33,7 +32,7 @@ const ChatbotTab = () => {
     }
   }, [chat]);
     
-  const apiKey = Config.GEMINI_API_KEY || "";
+  const apiKey = "";
   const apiUrl =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
