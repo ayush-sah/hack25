@@ -42,15 +42,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="mood"
-        options={{
-          title: 'Mood Tracker',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'happy' : 'happy-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="trivia"
         options={{
           title: 'Trivia',
