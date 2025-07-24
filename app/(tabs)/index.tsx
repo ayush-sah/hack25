@@ -12,11 +12,9 @@ import {
   StatusBar,
   Linking,
   SafeAreaView,
-  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useAuth } from "@/context/context";
-import axios from "axios";
 
 const tileData = [
   {
@@ -60,79 +58,6 @@ const HomeScreen = () => {
     title: string;
     description: string;
   } | null>(null);
-  const [tipModalVisible, setTipModalVisible] = useState(false);
-  const [financeTip, setFinanceTip] = useState("");
-  const [tipLoading, setTipLoading] = useState(false);
-
-  const { isAuthenticated, logout, cancelRegister } = useAuth();
-  const logo = require("../../assets/images/logo.png");
-
-  // Gemini API config (reuse from chatbot)
-  // const bearerToken = ""; // Add your Gemini API key here
-  // const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-
-  
-  //abc
-  const bearerToken ="AIzaSyD6cJhxDKJSV90zYjPqq46FgFTQrSViLhU"; // Replace with your bearer Token
-  const apiUrl =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-
-
-
-  // Fetch a single finance tip when user logs in
-  const fetchFinanceTip = React.useCallback(() => {
-    setFinanceTip("");
-    setTipLoading(true);
-    const randomizer = Math.floor(Math.random() * 1000000);
-    const prompt =
-      `Give only one very short (1-2 line), practical tip that increases the financial knowledge of a layman. The tip should be creative, actionable, and easy to understand. Do not return a list or multiple tips, just one. (Session: ${randomizer}) Answer in English.`;
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-        "X-goog-api-key": `${bearerToken}`,
-      },
-    };
-    const payload = JSON.stringify({
-      contents: [
-        {
-          role: "user",
-          parts: {
-            text: prompt,
-          },
-        },
-      ],
-      generationConfig: {
-        temperature: 1.08,
-        topP: 0.3,
-        topK: 40,
-        candidateCount: 1,
-        maxOutputTokens: 200,
-        presencePenalty: 1.0,
-        frequencyPenalty: -1.0,
-        responseMimeType: "text/plain",
-      },
-    });
-    axios
-      .post(apiUrl, payload, config)
-      .then((response) => {
-        const responseData = response.data;
-        const textContent =
-          responseData.candidates?.[0]?.content?.parts?.[0]?.text ||
-          "No tip available.";
-        setFinanceTip(textContent);
-      })
-      .catch(() => {
-        setFinanceTip("Sorry, could not fetch tip. Try again later.");
-      })
-      .finally(() => setTipLoading(false));
-  }, [bearerToken, apiUrl]);
-
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      setTipModalVisible(true);
-      fetchFinanceTip();
-    }
-  }, [isAuthenticated, fetchFinanceTip]);
 
   const renderTile = ({
     item,
@@ -152,6 +77,9 @@ const HomeScreen = () => {
       </View>
     </TouchableOpacity>
   );
+
+  const { logout, cancelRegister } = useAuth();
+  const logo = require("../../assets/images/logo.png");
 
   const handleLogout = () => {
     logout();
@@ -222,44 +150,6 @@ const HomeScreen = () => {
           </View>
         </Modal>
       </View>
-      {/* Finance Tip Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={tipModalVisible}
-        onRequestClose={() => setTipModalVisible(false)}
-      >
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.4)" }}>
-          <View style={{ backgroundColor: "#fff", borderRadius: 20, padding: 28, width: 340, alignItems: "center", shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 }}>
-            <View style={{ backgroundColor: '#e0f7fa', borderRadius: 50, padding: 16, marginBottom: 12 }}>
-              <Image source={require('../../assets/images/news-icon.png')} style={{ width: 40, height: 40 }} />
-            </View>
-            <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 10, color: "#008080", textAlign: 'center', letterSpacing: 0.5 }}>Finance Tip</Text>
-            {tipLoading ? (
-              <ActivityIndicator size="large" color="#008080" style={{ marginVertical: 24 }} />
-            ) : (
-              <Text style={{ fontSize: 18, color: "#222", marginBottom: 24, textAlign: "center", fontWeight: '500', lineHeight: 26 }}>
-                {financeTip.split(/(\*[^*]+\*)/g).map((part, idx) => {
-                  if (/^\*[^*]+\*$/.test(part)) {
-                    return (
-                      <Text key={idx} style={{ fontWeight: 'bold', color: '#008080' }}>{part.slice(1, -1)}</Text>
-                    );
-                  }
-                  return part;
-                })}
-              </Text>
-            )}
-            <TouchableOpacity
-              style={{ backgroundColor: "#008080", paddingHorizontal: 36, paddingVertical: 12, borderRadius: 24, shadowColor: '#008080', shadowOpacity: 0.18, shadowRadius: 6, elevation: 2 }}
-              onPress={() => setTipModalVisible(false)}
-              activeOpacity={0.85}
-              disabled={tipLoading}
-            >
-              <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16, letterSpacing: 0.2 }}>Dismiss</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: "#008080" }]}
