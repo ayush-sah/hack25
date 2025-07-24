@@ -1,380 +1,463 @@
-
-
-
 import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
+  Text,
   TextInput,
-  Alert,
-  FlatList,
   TouchableOpacity,
+  FlatList,
+  SafeAreaView,
   StatusBar,
-  Platform,
   Dimensions,
+  ScrollView,
+  Platform,
+  Modal,
+  TouchableWithoutFeedback,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AntDesign } from "@expo/vector-icons";
-import { ThemedText } from "@/components/ThemedText";
+import { AntDesign, Feather } from "@expo/vector-icons";
+import { LineChart } from "react-native-chart-kit";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import RNPickerSelect from "react-native-picker-select";
 
 const { width } = Dimensions.get("window");
 
-interface RoutineItem {
+interface Entry {
   id: string;
-  name: string;
-  time: Date;
-  category: "HIGH" | "MEDIUM" | "LOW";
-  completed: boolean;
+  type: "income" | "expense";
+  amount: number;
+  description: string;
+  date: string; // ISO string
+  recurring?: boolean;
 }
 
-const DailyRoutineTab: React.FC = () => {
-  const [routineItems, setRoutineItems] = useState<RoutineItem[]>([]);
-  const [newItemName, setNewItemName] = useState("");
-  const [newItemTime, setNewItemTime] = useState(new Date());
-  const [newItemCategory, setNewItemCategory] = useState<
-    "HIGH" | "MEDIUM" | "LOW"
-  >("MEDIUM"); // Default category
-  const [showForm, setShowForm] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+const ExploreScreen = () => {
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [desc, setDesc] = useState("");
+  const [amount, setAmount] = useState("");
+  const [type, setType] = useState<"income" | "expense">("income");
+  const [recurring, setRecurring] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [entryDate, setEntryDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // Load from storage
   useEffect(() => {
-    loadRoutineItems();
+    AsyncStorage.getItem("cashflowEntries").then((data) => {
+      if (data) setEntries(JSON.parse(data));
+    });
   }, []);
+  // Save to storage
+  useEffect(() => {
+    AsyncStorage.setItem("cashflowEntries", JSON.stringify(entries));
+  }, [entries]);
 
-  const loadRoutineItems = async () => {
-    try {
-      const storedItems = await AsyncStorage.getItem("routineItems");
-      if (storedItems) {
-        const parsedItems = JSON.parse(storedItems);
-        const itemsWithDates = parsedItems.map(
-          (item: { time: string | number | Date }) => ({
-            ...item,
-            time: new Date(item.time),
-          })
-        );
-        setRoutineItems(itemsWithDates);
-      }
-    } catch (error) {
-      console.error("Error loading routine items:", error);
-    }
-  };
-
-  const saveRoutineItems = async (updatedItems: RoutineItem[]) => {
-    try {
-      await AsyncStorage.setItem("routineItems", JSON.stringify(updatedItems));
-      setRoutineItems(updatedItems);
-    } catch (error) {
-      console.error("Error saving routine items:", error);
-    }
-  };
-
-  const addRoutineItem = () => {
-    if (newItemName.trim() === "" || newItemCategory.trim() === "") {
-      Alert.alert(
-        "Invalid Input",
-        "Please enter a name and category for the routine item."
-      );
-      return;
-    }
-
-    const newItem: RoutineItem = {
-      id: Date.now().toString(),
-      name: newItemName,
-      time: newItemTime,
-      category: newItemCategory,
-      completed: false, // Initialize new tasks as incomplete
+  // Add or edit entry
+  const handleSave = () => {
+    if (!desc.trim() || !amount.trim() || isNaN(Number(amount))) return;
+    const entry: Entry = {
+      id: editingId || Date.now().toString(),
+      type,
+      amount: Number(amount),
+      description: desc,
+      date: entryDate.toISOString(),
+      recurring,
     };
-
-    const updatedItems = [...routineItems, newItem].sort(
-      (a, b) =>
-        (a.time instanceof Date ? a.time : new Date(a.time)).getTime() -
-        (b.time instanceof Date ? b.time : new Date(b.time)).getTime()
-    );
-
-    saveRoutineItems(updatedItems);
-    setNewItemName("");
-    setNewItemTime(new Date());
-    setShowForm(false);
+    let updated;
+    if (editingId) {
+      updated = entries.map((e) => (e.id === editingId ? entry : e));
+    } else {
+      updated = [entry, ...entries];
+    }
+    setEntries(updated);
+    setDesc("");
+    setAmount("");
+    setType("income");
+    setRecurring(false);
+    setEditingId(null);
+    setEntryDate(new Date());
   };
 
-  const toggleTaskCompletion = (id: string) => {
-    const updatedItems = routineItems.map((item) =>
-      item.id === id ? { ...item, completed: !item.completed } : item
-    );
-    saveRoutineItems(updatedItems);
+  const handleEdit = (entry: Entry) => {
+    setDesc(entry.description);
+    setAmount(entry.amount.toString());
+    setType(entry.type);
+    setRecurring(!!entry.recurring);
+    setEditingId(entry.id);
+    setEntryDate(new Date(entry.date));
   };
 
-  const removeRoutineItem = (id: string) => {
-    const updatedItems = routineItems.filter((item) => item.id !== id);
-    saveRoutineItems(updatedItems);
+  const handleDelete = (id: string) => {
+    setEntries(entries.filter((e) => e.id !== id));
+    if (editingId === id) {
+      setDesc("");
+      setAmount("");
+      setType("income");
+      setRecurring(false);
+      setEditingId(null);
+      setEntryDate(new Date());
+    }
   };
 
-  const filteredItems = routineItems.filter(
-    (item) => item.category === newItemCategory
+  // Cash flow summary
+  const balance = entries.reduce(
+    (sum, e) => (e.type === "income" ? sum + e.amount : sum - e.amount),
+    0
   );
+  const today = new Date();
+  // Forecast: add recurring entries for next 30 days
+  const forecast = Array.from({ length: 30 }, (_, i) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    let bal = balance;
+    entries.forEach((e) => {
+      if (e.recurring) {
+        // Assume recurring every 7 days
+        const entryDate = new Date(e.date);
+        const daysSince = Math.floor(
+          (date.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        if (daysSince >= 0 && daysSince % 7 === 0) {
+          bal += e.type === "income" ? e.amount : -e.amount;
+        }
+      }
+    });
+    return { date, bal };
+  });
+
+  // Chart data
+  const chartData = {
+    labels: forecast.map((f, i) =>
+      i % 5 === 0 ? f.date.toLocaleDateString() : ""
+    ),
+    datasets: [
+      {
+        data: forecast.map((f) => f.bal),
+        color: () => "#008080",
+        strokeWidth: 2,
+      },
+    ],
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText style={styles.title}>Add tasks</ThemedText>
-        <View style={styles.dropdownContainer}>
-          <RNPickerSelect
-            value={newItemCategory}
-            onValueChange={(value) =>
-              setNewItemCategory(value as "HIGH" | "MEDIUM" | "LOW")
-            }
-            items={[
-              { label: "HIGH", value: "HIGH" },
-              { label: "MEDIUM", value: "MEDIUM" },
-              { label: "LOW", value: "LOW" },
-            ]}
-            style={{
-              inputIOS: styles.dropdown,
-              inputAndroid: styles.dropdown,
-            }}
-          />
-        </View>
-      </View>
-      <FlatList
-        data={filteredItems}
-        renderItem={({ item }) => (
-          <View style={styles.routineItem}>
-            <TouchableOpacity
-              onPress={() => toggleTaskCompletion(item.id)}
-              style={styles.checkbox}
-            >
-              <AntDesign
-                name={item.completed ? "checksquare" : "checksquareo"}
-                size={24}
-                color={item.completed ? "#008080" : "#A9A9A9"}
-              />
-            </TouchableOpacity>
-            <View style={styles.itemDetails}>
-              <ThemedText
-                style={[
-                  styles.itemName,
-                  {
-                    textDecorationLine: item.completed
-                      ? "line-through"
-                      : "none",
-                  },
-                ]}
-              >
-                {item.name}
-              </ThemedText>
-              <ThemedText
-                style={[
-                  styles.itemTime,
-                  {
-                    textDecorationLine: item.completed
-                      ? "line-through"
-                      : "none",
-                  },
-                ]}
-              >
-                {item.time instanceof Date
-                  ? item.time.toLocaleTimeString()
-                  : new Date(item.time).toLocaleTimeString()}
-              </ThemedText>
-              <ThemedText
-                style={[
-                  styles.itemCategory,
-                  {
-                    textDecorationLine: item.completed
-                      ? "line-through"
-                      : "none",
-                  },
-                ]}
-              >
-                Category: {item.category}
-              </ThemedText>
-            </View>
-            <TouchableOpacity onPress={() => removeRoutineItem(item.id)}>
-              <AntDesign name="delete" size={24} color="#ff6347" />
-            </TouchableOpacity>
-          </View>
-        )}
-        keyExtractor={(item) => item.id}
-      />
-      {showForm ? (
-        <View style={styles.form}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <Text style={styles.sectionTitle}>Balance: ${balance.toFixed(2)}</Text>
+        <View style={styles.formRow}>
           <TextInput
             style={styles.input}
-            placeholder="Activity Name"
-            value={newItemName}
-            onChangeText={setNewItemName}
+            placeholder="Description"
+            value={desc}
+            onChangeText={setDesc}
           />
-          {showTimePicker && (
-            <DateTimePicker
-              value={newItemTime}
-              mode="time"
-              is24Hour={true}
-              display="spinner"
-              onChange={(event, selectedTime) => {
-                if (selectedTime) {
-                  setNewItemTime(selectedTime);
-                  setShowTimePicker(false); // Hide the time picker after selecting a time
-                } else {
-                  setShowTimePicker(false); // Hide the time picker if the selection is canceled
-                }
-              }}
-            />
-          )}
-
+          <TextInput
+            style={styles.input}
+            placeholder="Amount"
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="numeric"
+          />
+        </View>
+        <View style={styles.formRow}>
           <TouchableOpacity
-            style={styles.timePickerButton}
-            onPress={() => setShowTimePicker(true)}
+            style={[
+              styles.typeBtn,
+              type === "income" && styles.typeBtnActiveIncome,
+            ]}
+            onPress={() => setType("income")}
           >
-            <AntDesign name="clockcircleo" size={24} color="#008080" />
-            <ThemedText style={styles.timePickerText}>
-              {newItemTime.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </ThemedText>
+            <Feather
+              name="arrow-down-circle"
+              size={18}
+              color={type === "income" ? "#fff" : "#008080"}
+            />
+            <Text
+              style={[
+                styles.typeBtnText,
+                type === "income" && { color: "#fff" },
+              ]}
+            >
+              Income
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.addButton} onPress={addRoutineItem}>
-            <ThemedText style={styles.addButtonText}>
-              Add Routine Item
-            </ThemedText>
+          <TouchableOpacity
+            style={[
+              styles.typeBtn,
+              type === "expense" && styles.typeBtnActiveExpense,
+            ]}
+            onPress={() => setType("expense")}
+          >
+            <Feather
+              name="arrow-up-circle"
+              size={18}
+              color={type === "expense" ? "#fff" : "#DE3163"}
+            />
+            <Text
+              style={[
+                styles.typeBtnText,
+                type === "expense" && { color: "#fff" },
+              ]}
+            >
+              Expense
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.recurringBtn,
+              recurring && styles.recurringBtnActive,
+            ]}
+            onPress={() => setRecurring((r) => !r)}
+          >
+            <AntDesign
+              name={recurring ? "checksquare" : "checksquareo"}
+              size={18}
+              color={recurring ? "#008080" : "#888"}
+            />
+            <Text style={styles.recurringBtnText}>Recurring</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.dateBtn}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <AntDesign name="calendar" size={18} color="#008080" />
+            <Text style={styles.dateBtnText}>
+              {entryDate.toLocaleDateString()}
+            </Text>
           </TouchableOpacity>
         </View>
-      ) : (
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowForm(true)}
-        >
-          <AntDesign name="plus" size={24} color="#ffffff" />
+        {showDatePicker && (
+          <Modal
+            transparent
+            animationType="fade"
+            visible={showDatePicker}
+            onRequestClose={() => setShowDatePicker(false)}
+          >
+            <TouchableWithoutFeedback onPress={() => setShowDatePicker(false)}>
+              <View style={styles.pickerOverlay}>
+                <View style={styles.pickerContainer}>
+                  <DateTimePicker
+                    value={entryDate}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={(event, selectedDate) => {
+                      setShowDatePicker(false);
+                      if (selectedDate) setEntryDate(selectedDate);
+                    }}
+                    style={{ width: 320, backgroundColor: "#fff" }}
+                  />
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+        )}
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+          <Text style={styles.saveBtnText}>{editingId ? "Update" : "Add"}</Text>
         </TouchableOpacity>
-      )}
-    </View>
+        <Text style={styles.sectionTitle}>Entries</Text>
+        <FlatList
+          data={entries}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.entryRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.entryDesc}>{item.description}</Text>
+                <Text style={styles.entryMeta}>
+                  {item.type === "income" ? "+" : "-"}${item.amount.toFixed(2)}{" "}
+                  | {new Date(item.date).toLocaleDateString()}{" "}
+                  {item.recurring ? "(Recurring)" : ""}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => handleEdit(item)}>
+                <Feather
+                  name="edit"
+                  size={20}
+                  color="#008080"
+                  style={{ marginRight: 12 }}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                <AntDesign name="delete" size={20} color="#DE3163" />
+              </TouchableOpacity>
+            </View>
+          )}
+          style={{ marginBottom: 24 }}
+        />
+        <Text style={styles.sectionTitle}>30-Day Forecast</Text>
+        <View style={styles.chartContainer}>
+          <LineChart
+            data={chartData}
+            width={width - 32}
+            height={220}
+            chartConfig={{
+              backgroundColor: "#fff",
+              backgroundGradientFrom: "#fff",
+              backgroundGradientTo: "#fff",
+              decimalPlaces: 2,
+              color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+              style: { borderRadius: 16 },
+              propsForDots: {
+                r: "3",
+                strokeWidth: "2",
+                stroke: "#008080",
+              },
+            }}
+            bezier
+            style={{ borderRadius: 12 }}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ECF0F1",
+    backgroundColor: "#F8F9FA",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-    paddingHorizontal: 10,
   },
-  header: {
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: "#BDC3C7",
-    marginBottom: 16,
-    paddingHorizontal: 20,
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#008080",
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  formRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // Align items horizontally
+    marginBottom: 10,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#DE3163",
-  },
-  dropdownContainer: {
+  input: {
     flex: 1,
-    marginLeft: 10, // Adjust spacing between title and dropdown
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderRadius: 5,
-    borderColor: "#BDC3C7",
-    paddingHorizontal: 10,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    padding: 10,
+    marginRight: 8,
+    fontSize: 16,
   },
-  dropdown: {
-    height: 40,
-    marginBottom: 16,
-    borderColor: "#BDC3C7",
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-  },
-  routineItem: {
+  typeBtn: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 8,
+    backgroundColor: "#fff",
   },
-  itemName: {
-    fontSize: 18,
+  typeBtnActiveIncome: {
+    backgroundColor: "#008080",
+    borderColor: "#008080",
+  },
+  typeBtnActiveExpense: {
+    backgroundColor: "#DE3163",
+    borderColor: "#DE3163",
+  },
+  typeBtnText: {
+    marginLeft: 6,
     fontWeight: "bold",
-    color: "#333333",
+    color: "#008080",
   },
-  itemTime: {
-    fontSize: 14,
-    color: "#666666",
+  recurringBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#fff",
+    marginRight: 8,
   },
-  itemCategory: {
-    fontSize: 14,
+  recurringBtnActive: {
+    borderColor: "#008080",
+    backgroundColor: "#e0f7fa",
+  },
+  recurringBtnText: {
+    marginLeft: 6,
     color: "#008080",
     fontWeight: "bold",
   },
-  itemDetails: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  form: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    padding: 20,
-    marginHorizontal: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  input: {
+  dateBtn: {
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: "#BDC3C7",
-    borderRadius: 5,
-    padding: 12,
-    marginBottom: 16,
-    fontSize: 16,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#fff",
   },
-  addButton: {
+  dateBtnText: {
+    marginLeft: 6,
+    color: "#008080",
+    fontWeight: "bold",
+  },
+  saveBtn: {
     backgroundColor: "#008080",
-    padding: 16,
+    padding: 14,
     borderRadius: 10,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-    marginHorizontal: width * 0.1,
-    marginBottom: 20,
+    marginVertical: 10,
   },
-  addButtonText: {
-    color: "#FFFFFF",
+  saveBtnText: {
+    color: "#fff",
     fontWeight: "bold",
     fontSize: 18,
   },
-  timePickerButton: {
+  entryRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0F0F0",
+    backgroundColor: "#fff",
+    borderRadius: 8,
     padding: 12,
-    borderRadius: 5,
-    marginBottom: 16,
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  timePickerText: {
-    marginLeft: 10,
+  entryDesc: {
     fontSize: 16,
-    color: "#333333",
+    fontWeight: "bold",
+    color: "#222",
   },
-  checkbox: {
-    marginRight: 10,
+  entryMeta: {
+    fontSize: 14,
+    color: "#888",
+  },
+  chartContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 8,
+    marginTop: 8,
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  pickerOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pickerContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 320,
+    maxWidth: "90%",
+    alignSelf: "center",
   },
 });
 
-export default DailyRoutineTab;
+export default ExploreScreen;

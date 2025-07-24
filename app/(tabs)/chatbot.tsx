@@ -31,8 +31,8 @@ const ChatbotTab = () => {
       flatListRef.current.scrollToEnd({ animated: true });
     }
   }, [chat]);
-    
-  const apiKey = "";
+
+  const apiKey = "AIzaSyD6cJhxDKJSV90zYjPqq46FgFTQrSViLhU";
   const apiUrl =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
@@ -68,7 +68,12 @@ const ChatbotTab = () => {
       const smsArray = mockSmsData;
 
       const smsContent = smsArray
-        .map((sms) => `Date: ${new Date(sms.date).toISOString().split("T")[0]}, Body: ${sms.body}`)
+        .map(
+          (sms) =>
+            `Date: ${new Date(sms.date).toISOString().split("T")[0]}, Body: ${
+              sms.body
+            }`
+        )
         .join("\n");
 
       const prompt = `
@@ -93,12 +98,13 @@ const ChatbotTab = () => {
       setAnalysisResult(textContent);
       setResultsModalVisible(true);
     } catch (error) {
+      const err = error as any;
       setChat((prevChat) => [
         ...prevChat,
         {
           text:
             "Error generating financial report: " +
-            (error.response?.data?.error?.message || error.message),
+            (err.response?.data?.error?.message || err.message),
           type: "bot",
         },
       ]);
@@ -141,8 +147,9 @@ const ChatbotTab = () => {
       const textContent = response.data.candidates[0].content.parts[0].text;
       setChat((prevChat) => [...prevChat, { text: textContent, type: "bot" }]);
     } catch (error) {
+      const err = error as any;
       const errorMessage =
-        error.response?.data?.error?.message || "Sorry, there was an error.";
+        err.response?.data?.error?.message || "Sorry, there was an error.";
       setChat((prevChat) => [...prevChat, { text: errorMessage, type: "bot" }]);
     } finally {
       setLoading(false);
@@ -154,11 +161,22 @@ const ChatbotTab = () => {
     flatListRef.current?.scrollToEnd({ animated: true });
   };
 
-  const renderChatItem = ({ item }: { item: { text: string; type: string } }) => {
+  const renderChatItem = ({
+    item,
+  }: {
+    item: { text: string; type: string };
+  }) => {
     const isUser = item.type === "user";
     return (
-      <View style={[styles.chatItem, isUser ? styles.userChatItem : styles.botChatItem]}>
-        <Text style={isUser ? styles.userMessage : styles.botMessage}>{item.text}</Text>
+      <View
+        style={[
+          styles.chatItem,
+          isUser ? styles.userChatItem : styles.botChatItem,
+        ]}
+      >
+        <Text style={isUser ? styles.userMessage : styles.botMessage}>
+          {item.text}
+        </Text>
       </View>
     );
   };
@@ -179,36 +197,47 @@ const ChatbotTab = () => {
   return (
     <ThemeProvider value={theme}>
       <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.container}>
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => setActionsModalVisible(true)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.actionButtonText}>Actions</Text>
-            </TouchableOpacity>
-          </View>
-
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => setActionsModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.actionButtonText}>Actions</Text>
+          </TouchableOpacity>
+        </View>
+        <ThemedView style={[styles.container, { paddingTop: 0 }]}>
           {/* MODAL */}
-          <Modal visible={isActionsModalVisible} transparent animationType="slide">
+          <Modal
+            visible={isActionsModalVisible}
+            transparent
+            animationType="slide"
+          >
             <View style={styles.modalOverlay}>
               <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Select an Action</Text>
-                <TouchableOpacity style={styles.modalButton} onPress={analyzeSpending}>
-                  <Text style={styles.modalButtonText}>Analyze My Last 7 Days Financial Activity</Text>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={analyzeSpending}
+                >
+                  <Text style={styles.modalButtonText}>
+                    Analyze My Last 7 Days Financial Activity
+                  </Text>
                 </TouchableOpacity>
-                {["View Budget Summary", "Track Investments", "Set Savings Goal", "Analyze Credit Card Spending"].map(
-                  (feature) => (
-                    <TouchableOpacity
-                      key={feature}
-                      style={styles.modalButton}
-                      onPress={() => handleUnderDevelopment(feature)}
-                    >
-                      <Text style={styles.modalButtonText}>{feature}</Text>
-                    </TouchableOpacity>
-                  )
-                )}
+                {[
+                  "View Budget Summary",
+                  "Track Investments",
+                  "Set Savings Goal",
+                  "Analyze Credit Card Spending",
+                ].map((feature) => (
+                  <TouchableOpacity
+                    key={feature}
+                    style={styles.modalButton}
+                    onPress={() => handleUnderDevelopment(feature)}
+                  >
+                    <Text style={styles.modalButtonText}>{feature}</Text>
+                  </TouchableOpacity>
+                ))}
                 <TouchableOpacity
                   style={[styles.modalButton, styles.cancelButton]}
                   onPress={() => setActionsModalVisible(false)}
@@ -220,7 +249,11 @@ const ChatbotTab = () => {
           </Modal>
 
           {/* ANALYSIS RESULTS */}
-          <Modal visible={isResultsModalVisible} transparent animationType="slide">
+          <Modal
+            visible={isResultsModalVisible}
+            transparent
+            animationType="slide"
+          >
             <View style={styles.modalOverlay}>
               <View style={styles.resultsModalContent}>
                 <Text style={styles.resultsModalTitle}>Spending Analysis</Text>
@@ -244,7 +277,11 @@ const ChatbotTab = () => {
             renderItem={renderChatItem}
             keyExtractor={(_, i) => `${i}`}
             contentContainerStyle={styles.chatContainer}
-            ListFooterComponent={isLoading ? <ActivityIndicator size="large" color={theme.colors.primary} /> : null}
+            ListFooterComponent={
+              isLoading ? (
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+              ) : null
+            }
           />
 
           {/* MESSAGE INPUT */}
@@ -256,7 +293,12 @@ const ChatbotTab = () => {
               onChangeText={setMessage}
               onSubmitEditing={handleMessageSend}
             />
-            <Button title="Send" onPress={handleMessageSend} disabled={isLoading} color={theme.colors.primary} />
+            <Button
+              title="Send"
+              onPress={handleMessageSend}
+              disabled={isLoading}
+              color={theme.colors.primary}
+            />
           </View>
         </ThemedView>
       </SafeAreaView>

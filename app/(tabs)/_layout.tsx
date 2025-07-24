@@ -30,10 +30,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: "Todo",
+          title: "Cash Flow",
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon
-              name={focused ? "timer" : "timer-outline"}
+              name={focused ? "wallet" : "wallet-outline"}
               color={color}
             />
           ),

@@ -42,7 +42,7 @@ const languages = [
   { label: "Vietnamese", value: "vi" },
 ];
 
-const NEWS_API_KEY = "";
+const NEWS_API_KEY = "de00cd4ca3cb4d22a5a9aae734833d6b";
 const NEWS_API_URL = "https://newsapi.org/v2/everything";
 
 type Article = {
@@ -92,7 +92,10 @@ const NewsScreen = () => {
         setHasMore(false);
       }
     } catch (err) {
-      setError("Could not load news articles.");
+      setError(
+        translations[selectedLanguage]?.loadError ||
+          translations["en"].loadError
+      );
       setHasMore(false);
     } finally {
       setLoading(false);
@@ -155,97 +158,120 @@ const NewsScreen = () => {
 
   const translations: Record<
     string,
-    { stayInformed: string; selectLanguage: string; newsTitle: string }
+    {
+      stayInformed: string;
+      selectLanguage: string;
+      newsTitle: string;
+      loadError: string;
+    }
   > = {
     en: {
       stayInformed: "Stay Informed",
       selectLanguage: "Select Language",
       newsTitle: "Financial Inclusion News",
+      loadError: "Could not load news articles.",
     },
     de: {
       stayInformed: "Bleiben Sie informiert",
       selectLanguage: "Sprache auswählen",
       newsTitle: "Nachrichten zur finanziellen Inklusion",
+      loadError: "Nachrichtenartikel konnten nicht geladen werden.",
     },
     es: {
       stayInformed: "Mantente informado",
       selectLanguage: "Seleccionar idioma",
       newsTitle: "Noticias de inclusión financiera",
+      loadError: "No se pudieron cargar las noticias.",
     },
     fr: {
       stayInformed: "Restez informé",
       selectLanguage: "Choisir la langue",
       newsTitle: "Actualités sur l'inclusion financière",
+      loadError: "Impossible de charger les articles de presse.",
     },
     hi: {
       stayInformed: "सूचित रहें",
       selectLanguage: "भाषा चुनें",
       newsTitle: "वित्तीय समावेशन समाचार",
+      loadError: "समाचार लोड नहीं हो सके।",
     },
     zh: {
       stayInformed: "保持关注",
       selectLanguage: "选择语言",
       newsTitle: "金融包容性新闻",
+      loadError: "无法加载新闻文章。",
     },
     bn: {
       stayInformed: "সতর্ক থাকুন",
       selectLanguage: "ভাষা নির্বাচন করুন",
       newsTitle: "আর্থিক অন্তর্ভুক্তি সংবাদ",
+      loadError: "সংবাদ লোড করা যায়নি।",
     },
     jp: {
       stayInformed: "最新情報を入手",
       selectLanguage: "言語を選択",
       newsTitle: "金融包摂ニュース",
+      loadError: "ニュース記事を読み込めませんでした。",
     },
     tr: {
       stayInformed: "Haberdar Olun",
       selectLanguage: "Dil Seçin",
       newsTitle: "Finansal Kapsayıcılık Haberleri",
+      loadError: "Haberler yüklenemedi.",
     },
     cz: {
       stayInformed: "Zůstaňte informováni",
       selectLanguage: "Vyberte jazyk",
       newsTitle: "Zprávy o finanční inkluzi",
+      loadError: "Nelze načíst zprávy.",
     },
     fi: {
       stayInformed: "Pysy ajan tasalla",
       selectLanguage: "Valitse kieli",
       newsTitle: "Rahoituksellisen osallisuuden uutiset",
+      loadError: "Uutisia ei voitu ladata.",
     },
     hu: {
       stayInformed: "Maradjon tájékozott",
       selectLanguage: "Válasszon nyelvet",
       newsTitle: "Pénzügyi befogadás hírek",
+      loadError: "A híreket nem sikerült betölteni.",
     },
     id: {
       stayInformed: "Tetap Terinformasi",
       selectLanguage: "Pilih Bahasa",
       newsTitle: "Berita Inklusi Keuangan",
+      loadError: "Berita tidak dapat dimuat.",
     },
     ko: {
       stayInformed: "정보를 받아보세요",
       selectLanguage: "언어 선택",
       newsTitle: "금융 포용 뉴스",
+      loadError: "뉴스 기사를 불러올 수 없습니다.",
     },
     sk: {
       stayInformed: "Zostaňte informovaní",
       selectLanguage: "Vyberte jazyk",
       newsTitle: "Správy o finančnej inklúzii",
+      loadError: "Nepodarilo sa načítať správy.",
     },
     th: {
       stayInformed: "รับข้อมูลข่าวสาร",
       selectLanguage: "เลือกภาษา",
       newsTitle: "ข่าวการรวมทางการเงิน",
+      loadError: "ไม่สามารถโหลดข่าวได้",
     },
     pt: {
       stayInformed: "Fique informado",
       selectLanguage: "Selecionar idioma",
       newsTitle: "Notícias de inclusão financeira",
+      loadError: "Não foi possível carregar as notícias.",
     },
     ru: {
       stayInformed: "Будьте в курсе",
       selectLanguage: "Выберите язык",
       newsTitle: "Новости финансовой инклюзии",
+      loadError: "Не удалось загрузить новости.",
     },
   };
 
@@ -269,7 +295,7 @@ const NewsScreen = () => {
             selectedValue={selectedLanguage}
             style={styles.picker}
             onValueChange={(itemValue) => setSelectedLanguage(itemValue)}
-            dropdownIconColor="#008080"
+            dropdownIconColor="rgb(0, 128, 128)"
           >
             {languages.map((lang) => (
               <Picker.Item
@@ -286,7 +312,7 @@ const NewsScreen = () => {
         {loading && articles.length === 0 ? (
           <ActivityIndicator
             size="large"
-            color="#008080"
+            color="rgb(0, 128, 128)"
             style={{ marginTop: 30 }}
           />
         ) : error ? (
@@ -303,7 +329,7 @@ const NewsScreen = () => {
                 loadingMore ? (
                   <ActivityIndicator
                     size="small"
-                    color="#008080"
+                    color="rgb(0, 128, 128)"
                     style={{ marginVertical: 16 }}
                   />
                 ) : (
@@ -335,7 +361,7 @@ const ARTICLE_ROW_WIDTH = Math.min(Math.max(SCREEN_WIDTH * 0.8, 280), 500); // M
 const styles = StyleSheet.create({
   gradientBg: {
     flex: 1,
-    backgroundColor: "#e0f7fa",
+    backgroundColor: "#F8F9FA",
     padding: 0,
     alignItems: "center",
   },
@@ -356,7 +382,7 @@ const styles = StyleSheet.create({
   bannerText: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#008080",
+    color: "rgb(0, 128, 128)",
     letterSpacing: 1,
   },
   card: {
@@ -375,7 +401,7 @@ const styles = StyleSheet.create({
   dropdownLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#008080",
+    color: "rgb(0, 128, 128)",
     marginBottom: 8,
   },
   pickerWrapper: {
@@ -383,13 +409,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#b2dfdb",
+    borderColor: "rgb(0, 128, 128)",
     backgroundColor: "#f5f5f5",
   },
   picker: {
     width: "100%",
     height: Platform.OS === "ios" ? 120 : 44,
-    color: "#008080",
+    color: "rgb(0, 128, 128)",
     fontSize: 16,
   },
   contentContainer: {
@@ -412,13 +438,13 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: "#008080",
+    color: "rgb(0, 128, 128)",
     fontWeight: "bold",
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#008080",
+    color: "rgb(0, 128, 128)",
     marginBottom: 10,
     textAlign: "center",
     letterSpacing: 0.5,
@@ -470,12 +496,12 @@ const styles = StyleSheet.create({
   articleTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#008080",
+    color: "rgb(0, 128, 128)",
     marginBottom: 4,
   },
   articleDescription: {
     fontSize: 14,
-    color: "#333",
+    color: "#222",
     marginBottom: 6,
   },
   articleMeta: {
@@ -485,7 +511,7 @@ const styles = StyleSheet.create({
   loadMoreBtn: {
     marginVertical: 20,
     alignSelf: "center",
-    backgroundColor: "#008080",
+    backgroundColor: "rgb(0, 128, 128)",
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 24,
