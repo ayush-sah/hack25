@@ -1,273 +1,132 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
-  FlatList,
-  Button,
-  Modal,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Audio } from "expo-av";
 
-interface Card {
-  id: number;
-  value: string;
-  flipped: boolean;
-  matched: boolean;
-}
-
-const CARD_SETS = [
-  ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼"],
-  ["🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓"],
-  ["🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑"],
-  ["🇺🇸", "🇬🇧", "🇫🇷", "🇩🇪", "🇮🇹", "🇯🇵", "🇨🇳", "🇧🇷"],
-  ["⚽", "🏀", "🏈", "⚾", "🎾", "🏐", "🏉", "🎱"],
+const QUIZ_QUESTIONS = [
+  {
+    question: "What is a budget?",
+    options: [
+      "A plan for managing income and expenses",
+      "A type of bank account",
+      "A loan from a bank",
+      "A credit card fee",
+    ],
+    answer: 0,
+  },
+  {
+    question: "Which of the following is considered a good financial habit?",
+    options: [
+      "Spending more than you earn",
+      "Saving a portion of your income",
+      "Ignoring bills",
+      "Only using cash for purchases",
+    ],
+    answer: 1,
+  },
+  {
+    question: "What does 'interest' mean in personal finance?",
+    options: [
+      "A type of tax",
+      "Money earned or paid for the use of money",
+      "A government grant",
+      "A shopping discount",
+    ],
+    answer: 1,
+  },
+  {
+    question: "Which is the safest place to keep your emergency savings?",
+    options: [
+      "Under your mattress",
+      "In a checking account",
+      "In a savings account at a bank",
+      "In stocks",
+    ],
+    answer: 2,
+  },
+  {
+    question: "What is a credit score?",
+    options: [
+      "A number that represents your financial trustworthiness",
+      "The amount of money in your account",
+      "Your monthly income",
+      "A type of loan",
+    ],
+    answer: 0,
+  },
 ];
 
-const DIFFICULTY_LEVELS = { Easy: 8, Medium: 12, Hard: 16 };
+const QuizTab: React.FC = () => {
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizSelected, setQuizSelected] = useState<number | null>(null);
+  const [quizFeedback, setQuizFeedback] = useState<string | null>(null);
+  const [quizFinished, setQuizFinished] = useState(false);
 
-const MemoryGameTab: React.FC = () => {
-  const [cards, setCards] = useState<Card[]>([]);
-  const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
-  const [matchedPairs, setMatchedPairs] = useState<number[]>([]);
-  const [score, setScore] = useState(0);
-  const [moves, setMoves] = useState(0);
-  const [timer, setTimer] = useState(0);
-  const [isGameActive, setIsGameActive] = useState(false);
-  const [difficulty, setDifficulty] =
-    useState<keyof typeof DIFFICULTY_LEVELS>("Easy");
-
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [gameOverMessage, setGameOverMessage] = useState("");
-
-  useEffect(() => {
-    initializeGame();
-  }, [difficulty]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isGameActive) {
-      interval = setInterval(() => {
-        setTimer((prevTimer) => prevTimer + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isGameActive]);
-
-  const initializeGame = () => {
-    const cardCount = DIFFICULTY_LEVELS[difficulty];
-    const randomSetIndex = Math.floor(Math.random() * CARD_SETS.length);
-    const values = CARD_SETS[randomSetIndex].slice(0, cardCount / 2);
-    const initialCards: Card[] = values.concat(values).map((value, index) => ({
-      id: index,
-      value,
-      flipped: false,
-      matched: false,
-    }));
-    shuffleCards(initialCards);
-    setCards(initialCards);
-    setFlippedIndices([]);
-    setMatchedPairs([]);
-    setScore(0);
-    setMoves(0);
-    setTimer(0);
-    setIsGameActive(true);
-  };
-
-  const shuffleCards = (cardsArray: Card[]) => {
-    for (let i = cardsArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [cardsArray[i], cardsArray[j]] = [cardsArray[j], cardsArray[i]];
-    }
-  };
-
-  const handleCardPress = async (index: number) => {
-    if (
-      flippedIndices.length < 2 &&
-      !cards[index].flipped &&
-      !cards[index].matched
-    ) {
-      const newCards = [...cards];
-      newCards[index].flipped = true;
-      setCards(newCards);
-      setFlippedIndices([...flippedIndices, index]);
-      setMoves((prevMoves) => prevMoves + 1);
-
-      await playSound("flip");
-
-      if (flippedIndices.length === 1) {
-        const firstIndex = flippedIndices[0];
-        if (newCards[firstIndex].value === newCards[index].value) {
-          newCards[firstIndex].matched = true;
-          newCards[index].matched = true;
-          setMatchedPairs([...matchedPairs, firstIndex, index]);
-          setScore((prevScore) => prevScore + 10);
-          await playSound("match");
-          checkGameCompletion(newCards);
-        } else {
-          setTimeout(async () => {
-            newCards[firstIndex].flipped = false;
-            newCards[index].flipped = false;
-            setCards(newCards);
-            setFlippedIndices([]);
-            await playSound("nomatch");
-          }, 1000);
-        }
-      }
-    }
-  };
-
-  const checkGameCompletion = async (currentCards: Card[]) => {
-    setIsGameActive(false);
-    playSound("complete");
-    const finalScore = calculateFinalScore();
-    saveHighScore(finalScore);
-    const analysis = analyzePerformance(finalScore, moves, timer);
-    const message = `Congratulations! Your score: ${finalScore}\n\n${analysis}`;
-    setGameOverMessage(message);
-    setIsModalVisible(true);
-  };
-
-  const calculateFinalScore = () => {
-    const timeBonus = Math.max(0, 1000 - timer * 10);
-    const movePenalty = moves * 5;
-    return score + timeBonus - movePenalty;
-  };
-
-  const saveHighScore = async (finalScore: number) => {
-    try {
-      const currentHighScore = await AsyncStorage.getItem("highScore");
-      if (
-        currentHighScore === null ||
-        finalScore > parseInt(currentHighScore)
-      ) {
-        await AsyncStorage.setItem("highScore", finalScore.toString());
-      }
-    } catch (error) {
-      console.error("Error saving high score:", error);
-    }
-  };
-
-  const playSound = async (
-    soundType: "flip" | "match" | "nomatch" | "complete"
-  ) => {
-    const soundMap = {
-      flip: require("@/assets/sounds/flip.mp3"),
-      match: require("@/assets/sounds/match.mp3"),
-      nomatch: require("@/assets/sounds/nomatch.mp3"),
-      complete: require("@/assets/sounds/complete.mp3"),
-    };
-    const { sound } = await Audio.Sound.createAsync(soundMap[soundType]);
-    await sound.playAsync();
-  };
-
-  const renderCardItem = ({ item, index }: { item: Card; index: number }) => (
-    <TouchableOpacity
-      style={[
-        styles.card,
-        {
-          backgroundColor: item.flipped || item.matched ? "#2ecc71" : "#DE3163",
-        },
-      ]}
-      onPress={() => handleCardPress(index)}
-      activeOpacity={0.8}
-    >
-      <Text style={styles.cardText}>
-        {item.flipped || item.matched ? item.value : "?"}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const analyzePerformance = (score: number, moves: number, time: number) => {
-    const efficiency = score / (moves * time);
-
-    if (efficiency > 0.5) {
-      return "Excellent performance! Your memory skills are very strong.";
-    } else if (efficiency > 0.3) {
-      return "Good job! Your memory is functioning well, but there's room for improvement.";
-    } else if (efficiency > 0.1) {
-      return "Fair performance. Regular memory exercises may help improve your skills.";
+  const handleQuizOption = (optionIdx: number) => {
+    if (quizSelected !== null) return; // Prevent multiple answers
+    setQuizSelected(optionIdx);
+    if (optionIdx === QUIZ_QUESTIONS[quizIndex].answer) {
+      setQuizScore((prev) => prev + 1);
+      setQuizFeedback('Correct!');
     } else {
-      return "Your performance indicates some memory challenges. Consider consulting with a healthcare professional for a more thorough assessment.";
+      setQuizFeedback('Incorrect.');
     }
+    setTimeout(() => {
+      if (quizIndex + 1 < QUIZ_QUESTIONS.length) {
+        setQuizIndex((prev) => prev + 1);
+        setQuizSelected(null);
+        setQuizFeedback(null);
+      } else {
+        setQuizFinished(true);
+      }
+    }, 1000);
   };
 
-  const GameOverModal = ({
-    isVisible,
-    message,
-    onClose,
-    onRestart,
-  }: {
-    isVisible: boolean;
-    message: string;
-    onClose: () => void;
-    onRestart: () => void;
-  }) => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isVisible}
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Game Over</Text>
-          <Text style={styles.modalMessage}>{message}</Text>
-          <TouchableOpacity style={styles.modalButton} onPress={onRestart}>
-            <Text style={styles.modalButtonText}>Play Again</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.modalButton} onPress={onClose}>
-            <Text style={styles.modalButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
+  const handleQuizRestart = () => {
+    setQuizIndex(0);
+    setQuizScore(0);
+    setQuizSelected(null);
+    setQuizFeedback(null);
+    setQuizFinished(false);
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Score: {score}</Text>
-        <Text style={styles.headerText}>Moves: {moves}</Text>
-        <Text style={styles.headerText}>Time: {timer}s</Text>
+      <View style={styles.quizContainer}>
+        {!quizFinished ? (
+          <>
+            <Text style={styles.quizQuestion}>{QUIZ_QUESTIONS[quizIndex].question}</Text>
+            {QUIZ_QUESTIONS[quizIndex].options.map((opt, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={[
+                  styles.quizOption,
+                  quizSelected === idx && (idx === QUIZ_QUESTIONS[quizIndex].answer
+                    ? styles.quizOptionCorrect
+                    : styles.quizOptionIncorrect),
+                ]}
+                onPress={() => handleQuizOption(idx)}
+                disabled={quizSelected !== null}
+              >
+                <Text style={styles.quizOptionText}>{opt}</Text>
+              </TouchableOpacity>
+            ))}
+            {quizFeedback && <Text style={styles.quizFeedback}>{quizFeedback}</Text>}
+            <Text style={styles.quizProgress}>{`Question ${quizIndex + 1} of ${QUIZ_QUESTIONS.length}`}</Text>
+          </>
+        ) : (
+          <View style={styles.quizResultContainer}>
+            <Text style={styles.quizResultText}>{`Quiz Finished! Your score: ${quizScore} / ${QUIZ_QUESTIONS.length}`}</Text>
+            <TouchableOpacity style={styles.quizRestartButton} onPress={handleQuizRestart}>
+              <Text style={styles.quizRestartButtonText}>Restart Quiz</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
-      <FlatList
-        data={cards}
-        renderItem={renderCardItem}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={4}
-        contentContainerStyle={styles.cardsContainer}
-      />
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.modalButton} onPress={initializeGame}>
-          <Text style={styles.modalButtonText}>Reset Game</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.modalButton} onPress={initializeGame}>
-          <Text
-            onPress={() => {
-              const levels = Object.keys(
-                DIFFICULTY_LEVELS
-              ) as (keyof typeof DIFFICULTY_LEVELS)[];
-              const currentIndex = levels.indexOf(difficulty);
-              const nextDifficulty = levels[(currentIndex + 1) % levels.length];
-              setDifficulty(nextDifficulty);
-            }}
-            style={styles.modalButtonText}
-          >
-            {`Difficulty: ${difficulty}`}
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <GameOverModal
-        isVisible={isModalVisible}
-        message={gameOverMessage}
-        onClose={() => setIsModalVisible(false)}
-        onRestart={() => {
-          setIsModalVisible(false);
-          initializeGame();
-        }}
-      />
     </View>
   );
 };
@@ -277,107 +136,76 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#ECF0F1",
     padding: 16,
+    justifyContent: 'center',
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#BDC3C7",
-    marginBottom: 16,
-    marginTop: 25,
-  },
-  headerText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#2C3E50",
-  },
-  cardsContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 16,
-  },
-  card: {
-    width: 70,
-    height: 70,
-    margin: 8,
-    justifyContent: "center",
-    alignItems: "center",
+  quizContainer: {
+    backgroundColor: '#fff',
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardText: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    padding: 20,
     marginTop: 20,
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: "#008080",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
+    marginHorizontal: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 2,
   },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    padding: 24,
-    borderRadius: 10,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#2C3E50",
+  quizQuestion: {
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 16,
+    color: '#2C3E50',
   },
-  modalMessage: {
+  quizOption: {
+    backgroundColor: '#eee',
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+  quizOptionCorrect: {
+    backgroundColor: '#2ecc71',
+  },
+  quizOptionIncorrect: {
+    backgroundColor: '#DE3163',
+  },
+  quizOptionText: {
     fontSize: 16,
-    textAlign: "center",
-    color: "#34495E",
-    marginBottom: 24,
+    color: '#2C3E50',
   },
-  modalButton: {
-    backgroundColor: "#008080",
+  quizFeedback: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 10,
+    color: '#008080',
+    textAlign: 'center',
+  },
+  quizProgress: {
+    marginTop: 16,
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+  },
+  quizResultContainer: {
+    alignItems: 'center',
+  },
+  quizResultText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#2C3E50',
+    textAlign: 'center',
+  },
+  quizRestartButton: {
+    backgroundColor: '#008080',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 5,
     marginTop: 10,
   },
-  modalButtonText: {
-    color: "#FFFFFF",
+  quizRestartButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
 });
 
-export default MemoryGameTab;
+export default QuizTab;
