@@ -18,17 +18,10 @@ const ChatbotTab = () => {
   const [isLoading, setLoading] = useState(false);
   const flatListRef = useRef<FlatList<any> | null>(null);
 
-  // Scroll to bottom when chat updates
-  React.useEffect(() => {
-    if (flatListRef.current && chat.length > 0) {
-      flatListRef.current.scrollToEnd({ animated: true });
-    }
-  }, [chat]);
-
   //abc
-  const bearerToken = "AIzaSyD6cJhxDKJSV90zYjPqq46FgFTQrSViLhU";
+  const bearerToken ="ya29.a0AXooCgsvVCUf9iyYyO0RRbRT8o6In7brakh2i8bBDNschcITVPd_B8965jcDzEw9PMLX9lrX0eFmT4M9T7tSx4gexuU7LuDz_UeLV_0f9q_QGXQrqJ1LUlz8iO1EOYNmmPM6sTZD2OnmLhJNG8RHEY4WvVV2UF-wUoSFyMcLgdixM3Rv2DVVG0JwcdRvoicV1aQw9JAPWkRn1w9-c78FcSzh3oJ1i8G-LoC9FN_97PlGLKW7lj6ha1UR2Lj0ViCYFlQcpfQVXpgxFRrOCddRL9BrczrTD-pqmRyrrOVC4KyTwRiwVwQZEJevePqvrOnMlNW_mgVrbqd7nTPVnqYBHjvV0mjZPLMUeDEQtXP7akkJSwIMUCQebKUxFvK1dLXsBhkSA8aaaQK0VkCCGYSdkZWXMKMaCgYKAR0SARESFQHGX2MiCsNKbtVdamR7aXeNfCVOJw0418";
   const apiUrl =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+    "https://us-central1-aiplatform.googleapis.com/v1/projects/hack-team-ultra-minds/locations/us-central1/publishers/google/models/gemini-1.5-flash-001:generateContent"; // Replace with your actual API endpoint
 
   const handleMessageSend = async () => {
     if (!message.trim()) return;
@@ -41,8 +34,8 @@ const ChatbotTab = () => {
       setLoading(true);
       const config = {
         headers: {
+          Authorization: `Bearer ${bearerToken}`,
           "Content-Type": "application/json",
-          "X-goog-api-key": `${bearerToken}`,
         },
       };
 
@@ -104,16 +97,7 @@ const ChatbotTab = () => {
         ]}
       >
         <Text style={isUser ? styles.userMessage : styles.botMessage}>
-          {isUser
-            ? item.text
-            : item.text.split(/(\*[^*]+\*)/g).map((part, idx) => {
-                if (/^\*[^*]+\*$/.test(part)) {
-                  return (
-                    <Text key={idx} style={{ fontWeight: 'bold', color: '#008080' }}>{part.slice(1, -1)}</Text>
-                  );
-                }
-                return part;
-              })}
+          {item.text}
         </Text>
       </View>
     );
@@ -145,11 +129,6 @@ const ChatbotTab = () => {
               <ActivityIndicator size="large" color={theme.colors.primary} />
             ) : null
           }
-          onContentSizeChange={() => {
-            if (flatListRef.current) {
-              flatListRef.current.scrollToEnd({ animated: true });
-            }
-          }}
         />
         <View style={styles.inputContainer}>
           <TextInput
