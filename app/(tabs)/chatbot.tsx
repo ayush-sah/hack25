@@ -26,6 +26,13 @@ const ChatbotTab = () => {
   const [analysisResult, setAnalysisResult] = useState("");
   const flatListRef = useRef<FlatList<any> | null>(null);
 
+  // Scroll to bottom when chat updates
+  React.useEffect(() => {
+    if (flatListRef.current && chat.length > 0) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [chat]);
+    
   const apiKey = Config.GEMINI_API_KEY || "";
   const apiUrl =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
