@@ -73,7 +73,7 @@ const HomeScreen = () => {
 
   
   //abc
-  const bearerToken =""; // Replace with your bearer Token
+  const bearerToken ="AIzaSyD6cJhxDKJSV90zYjPqq46FgFTQrSViLhU"; // Replace with your bearer Token
   const apiUrl =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
