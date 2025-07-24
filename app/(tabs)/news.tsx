@@ -9,7 +9,7 @@ const languages = [
   { label: 'French', value: 'fr' }
 ];
 
-const NEWS_API_KEY = ''; // Replace with your API key
+const NEWS_API_KEY = 'de00cd4ca3cb4d22a5a9aae734833d6b'; // Replace with your API key
 const NEWS_API_URL = 'https://newsapi.org/v2/everything';
 
 type Article = {
