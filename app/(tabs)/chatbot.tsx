@@ -26,7 +26,7 @@ const ChatbotTab = () => {
   }, [chat]);
 
   //abc
-  const bearerToken = "AIzaSyD6cJhxDKJSV90zYjPqq46FgFTQrSViLhU";
+  const bearerToken = "";
   const apiUrl =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
