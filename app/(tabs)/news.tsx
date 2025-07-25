@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 40,
+    marginTop: 60, // Increased top margin for better spacing
     marginBottom: 16,
     flexDirection: "row",
   },

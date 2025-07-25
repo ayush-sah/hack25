@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -9,12 +9,12 @@ import {
   TextInput,
   Dimensions,
   Platform,
-  Picker,
 } from "react-native";
 import { ThemeProvider } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { LineChart, BarChart } from "react-native-chart-kit";
+import { Picker } from "@react-native-picker/picker";
 
 // Instrument definitions
 const instruments = [
@@ -33,12 +33,14 @@ const instruments = [
         key: "amount",
         type: "numeric",
         placeholder: "50000",
+        defaultValue: "",
       },
       {
         label: "Tenure (years)",
         key: "tenure",
         type: "numeric",
         placeholder: "5",
+        defaultValue: "",
       },
     ],
   },
@@ -57,18 +59,21 @@ const instruments = [
         key: "balance",
         type: "numeric",
         placeholder: "10000",
+        defaultValue: "",
       },
       {
         label: "Payment %",
         key: "paymentPct",
         type: "numeric",
         placeholder: "5",
+        defaultValue: "",
       },
       {
         label: "Duration (months)",
         key: "tenure",
         type: "numeric",
         placeholder: "12",
+        defaultValue: "",
       },
     ],
   },
@@ -87,18 +92,21 @@ const instruments = [
         key: "sip",
         type: "numeric",
         placeholder: "5000",
+        defaultValue: "",
       },
       {
         label: "Tenure (years)",
         key: "tenure",
         type: "numeric",
         placeholder: "10",
+        defaultValue: "",
       },
       {
         label: "Step-up (%)",
         key: "stepUp",
         type: "dropdown",
         options: ["0", "5", "10", "15", "20"],
+        defaultValue: "0",
       },
     ],
   },
@@ -117,12 +125,14 @@ const instruments = [
         key: "deposit",
         type: "numeric",
         placeholder: "20000",
+        defaultValue: "",
       },
       {
         label: "Tenure (years)",
         key: "tenure",
         type: "numeric",
         placeholder: "3",
+        defaultValue: "",
       },
     ],
   },
@@ -141,12 +151,14 @@ const instruments = [
         key: "amount",
         type: "numeric",
         placeholder: "100000",
+        defaultValue: "",
       },
       {
         label: "Risk Profile",
         key: "risk",
         type: "dropdown",
         options: ["Low", "Medium", "High"],
+        defaultValue: "Low",
       },
     ],
   },
@@ -158,8 +170,27 @@ export default function SimulationScreen() {
   const [result, setResult] = useState<any>(null);
   const screenWidth = Dimensions.get("window").width;
 
-  const onChange = (key: string, val: any) =>
+  // Initialize values when an instrument is selected
+  useEffect(() => {
+    if (selected) {
+      const instr = instruments.find((i) => i.key === selected);
+      if (instr) {
+        const initialValues = instr.inputs.reduce((acc, inp) => {
+          acc[inp.key] = inp.defaultValue || "";
+          return acc;
+        }, {} as Record<string, any>);
+        setValues(initialValues);
+      } else {
+        setValues({});
+      }
+    } else {
+      setValues({});
+    }
+  }, [selected]);
+
+  const onChange = (key: string, val: any) => {
     setValues((v) => ({ ...v, [key]: val }));
+  };
 
   const simulate = () => {
     if (!selected) return;
@@ -167,132 +198,177 @@ export default function SimulationScreen() {
     for (let inp of instr.inputs) {
       if (
         !values[inp.key] ||
-        (inp.type === "numeric" && isNaN(+values[inp.key]))
+        (inp.type === "numeric" &&
+          (isNaN(+values[inp.key]) || +values[inp.key] <= 0))
       ) {
-        return alert(`Enter valid ${inp.label}`);
+        return alert(
+          `Enter a valid ${inp.label} (positive number required for numeric fields)`
+        );
       }
     }
     let chartData: any = { labels: [], datasets: [] };
     let simText = "";
     let advice = "";
 
-    switch (instr.key) {
-      case "fd": {
-        const P = +values.amount,
-          t = +values.tenure,
-          r = 0.06;
-        const arr = Array.from(
-          { length: t + 1 },
-          (_, y) => +(P * Math.pow(1 + r, y)).toFixed(2)
-        );
-        chartData.labels = arr.map((_, i) => `Y${i}`);
-        chartData.datasets = [{ data: arr, color: () => instr.color }];
-        simText = `Matures to ₹${arr[t]}`;
-        advice = "Consider laddering for flexibility.";
-        break;
-      }
-      case "cc": {
-        const bal = +values.balance,
-          payPct = +values.paymentPct / 100,
-          months = +values.tenure;
-        const balArr = [bal],
-          intArr = [0];
-        let total = 0;
-        for (let m = 1; m <= months; m++) {
-          const intr = balArr[m - 1] * 0.036;
-          total += intr;
-          balArr.push(
-            +(balArr[m - 1] + intr - balArr[m - 1] * payPct).toFixed(2)
+    try {
+      switch (instr.key) {
+        case "fd": {
+          const P = parseFloat(values.amount);
+          const t = parseInt(values.tenure);
+          const r = 0.06; // Fixed 6% rate
+          if (t < 1 || t > 10)
+            throw new Error("Tenure must be between 1-10 years");
+          const arr = Array.from(
+            { length: t + 1 },
+            (_, i) => +(P * Math.pow(1 + r, i)).toFixed(2)
           );
-          intArr.push(+total.toFixed(2));
+          chartData.labels = arr.map((_, i) => `Year ${i}`);
+          chartData.datasets = [{ data: arr, color: () => instr.color }];
+          simText = `Matures to ₹${arr[t].toLocaleString()}`;
+          advice = "Consider laddering for flexibility.";
+          break;
         }
-        chartData.labels = balArr.map((_, i) => `M${i}`);
-        chartData.datasets = [
-          { data: balArr, color: () => instr.color },
-          { data: intArr, color: () => "#B71C1C" },
-        ];
-        simText = `Remaining ₹${balArr[balArr.length - 1]}`;
-        advice = "Increase payments to reduce interest.";
-        break;
-      }
-      case "mf": {
-        const sip = +values.sip,
-          t = +values.tenure,
-          step = +values.stepUp / 100,
-          avg = 0.08;
-        let bal = 0,
-          arr = [0];
-        for (let y = 1; y <= t; y++) {
-          const c = sip * Math.pow(1 + step, y - 1);
-          for (let m = 0; m < 12; m++) bal = (bal + c) * (1 + avg / 12);
-          arr.push(+bal.toFixed(2));
+        case "cc": {
+          const bal = parseFloat(values.balance);
+          const payPct = parseFloat(values.paymentPct) / 100;
+          const months = parseInt(values.tenure);
+          if (payPct < 0.01 || payPct > 1)
+            throw new Error("Payment % must be between 1-100");
+          if (months < 1 || months > 60)
+            throw new Error("Duration must be between 1-60 months");
+          const balArr = [bal];
+          const intArr = [0];
+          let total = 0;
+          for (let m = 1; m <= months; m++) {
+            const intr = balArr[m - 1] * 0.03; // 3% monthly rate
+            total += intr;
+            balArr.push(
+              +(balArr[m - 1] + intr - balArr[0] * payPct).toFixed(2)
+            );
+            intArr.push(+total.toFixed(2));
+          }
+          chartData.labels = balArr.map((_, i) => `Month ${i}`);
+          chartData.datasets = [
+            { data: balArr, color: () => instr.color },
+            { data: intArr, color: () => "#B71C1C" },
+          ];
+          simText = `Remaining ₹${balArr[balArr.length - 1].toLocaleString()}`;
+          advice = "Increase payments to reduce interest.";
+          break;
         }
-        chartData.labels = arr.map((_, i) => `Y${i}`);
-        chartData.datasets = [{ data: arr, color: () => instr.color }];
-        simText = `Corpus ₹${arr[arr.length - 1]}`;
-        advice = "Maintain SIPs for long-term growth.";
-        break;
-      }
-      case "sa": {
-        const D = +values.deposit,
-          t = +values.tenure,
-          r = 0.04,
-          n = 4;
-        let arr = [D];
-        for (let y = 1; y <= t; y++) {
-          const f = arr[y - 1] * Math.pow(1 + r / n, n);
-          arr.push(+f.toFixed(2));
+        case "mf": {
+          const sip = parseFloat(values.sip);
+          const t = parseInt(values.tenure);
+          const step = parseFloat(values.stepUp) / 100;
+          const avg = 0.08; // 8% average return
+          if (t < 1 || t > 20)
+            throw new Error("Tenure must be between 1-20 years");
+          let bal = 0;
+          let arr = [0];
+          for (let y = 1; y <= t; y++) {
+            const c = sip * Math.pow(1 + step, y - 1);
+            for (let m = 0; m < 12; m++) bal = (bal + c) * (1 + avg / 12);
+            arr.push(+bal.toFixed(2));
+          }
+          chartData.labels = arr.map((_, i) => `Year ${i}`);
+          chartData.datasets = [{ data: arr, color: () => instr.color }];
+          simText = `Corpus ₹${arr[arr.length - 1].toLocaleString()}`;
+          advice = "Maintain SIPs for long-term growth.";
+          break;
         }
-        chartData.labels = arr.map((_, i) => `Y${i}`);
-        chartData.datasets = [{ data: arr, color: () => instr.color }];
-        simText = `Total ₹${arr[arr.length - 1]}`;
-        advice = "Great for emergency fund; keep 6 months reserve.";
-        break;
-      }
-      case "stocks": {
-        const A = +values.amount,
-          lvl = values.risk as "Low" | "Medium" | "High",
-          avg = 0.1;
-        const volMap = { Low: 0.02, Medium: 0.05, High: 0.1 };
-        let bal = A,
-          arr = [A];
-        for (let y = 1; y <= 5; y++) {
-          bal *= 1 + avg + (Math.random() * 2 - 1) * volMap[lvl];
-          arr.push(+bal.toFixed(2));
+        case "sa": {
+          const D = parseFloat(values.deposit);
+          const t = parseInt(values.tenure);
+          const r = 0.04; // 4% rate
+          const n = 4; // Quarterly compounding
+          if (t < 1 || t > 10)
+            throw new Error("Tenure must be between 1-10 years");
+          let arr = [D];
+          for (let y = 1; y <= t; y++) {
+            const f = arr[y - 1] * Math.pow(1 + r / n, n);
+            arr.push(+f.toFixed(2));
+          }
+          chartData.labels = arr.map((_, i) => `Year ${i}`);
+          chartData.datasets = [{ data: arr, color: () => instr.color }];
+          simText = `Total ₹${arr[arr.length - 1].toLocaleString()}`;
+          advice = "Great for emergency fund; keep 6 months reserve.";
+          break;
         }
-        chartData.labels = arr.map((_, i) => `Y${i}`);
-        chartData.datasets = [{ data: arr, color: () => instr.color }];
-        const cagr = (((arr[5] / A) ** (1 / 5) - 1) * 100).toFixed(1);
-        simText = `5yr ₹${arr[5]} (${cagr}% CAGR)`;
-        advice = "Diversify portfolio to manage risk.";
-        break;
+        case "stocks": {
+          const A = parseFloat(values.amount);
+          const lvl = values.risk;
+          const avg = 0.1; // 10% average return
+          const volMap = { Low: 0.02, Medium: 0.05, High: 0.1 };
+          if (!volMap[lvl]) throw new Error("Invalid risk profile");
+          let bal = A;
+          let arr = [A];
+          for (let y = 1; y <= 5; y++) {
+            bal *= 1 + avg + (Math.random() * 2 - 1) * volMap[lvl];
+            arr.push(+bal.toFixed(2));
+          }
+          chartData.labels = arr.map((_, i) => `Year ${i}`);
+          chartData.datasets = [{ data: arr, color: () => instr.color }];
+          const cagr = (((arr[5] / A) ** (1 / 5) - 1) * 100).toFixed(1);
+          simText = `5yr ₹${arr[5].toLocaleString()} (${cagr}% CAGR)`;
+          advice = "Diversify portfolio to manage risk.";
+          break;
+        }
       }
+      setResult({ instr, chartData, simText, advice });
+    } catch (error) {
+      alert(`Simulation error: ${error.message}`);
     }
-
-    setResult({ instr, chartData, simText, advice });
   };
 
   const renderChart = () => {
     if (!result) return null;
-    const { instr, chartData } = result;
+    const { instr, chartData, simText } = result;
+
+    // Disable chart rendering on web to avoid onResponderTerminate warning and crash
+    if (Platform.OS === "web") {
+      return (
+        <View style={styles.chartFallback}>
+          <Text style={styles.fallbackText}>
+            Chart visualization is unavailable on web. {simText}
+          </Text>
+          <Text style={styles.fallbackSubText}>
+            View detailed results on the FinWorld mobile app (Android/iOS).
+          </Text>
+        </View>
+      );
+    }
+
+    // Native chart rendering (Android/iOS)
     const cfg = {
       backgroundGradientFrom: "#fafafa",
       backgroundGradientTo: "#fafafa",
       color: () => instr.color,
       labelColor: () => "#333",
+      propsForDots: { r: "6", strokeWidth: "2", stroke: instr.color },
     };
-    const width = screenWidth - 60;
+    const width = Math.max(screenWidth - 60, chartData.labels.length * 50);
+
     return (
-      <View style={styles.chartContainer}>
-        <LineChart
-          data={chartData}
-          width={width}
-          height={200}
-          chartConfig={cfg}
-          bezier
-          style={styles.chart}
-        />
-      </View>
+      <ScrollView horizontal style={styles.chartScroll}>
+        {instr.chartType === "line" ? (
+          <LineChart
+            data={chartData}
+            width={width}
+            height={200}
+            chartConfig={cfg}
+            bezier
+            style={styles.chart}
+          />
+        ) : (
+          <BarChart
+            data={chartData}
+            width={width}
+            height={200}
+            chartConfig={cfg}
+            style={styles.chart}
+          />
+        )}
+      </ScrollView>
     );
   };
 
@@ -305,8 +381,6 @@ export default function SimulationScreen() {
           background: "#ECF0F1",
           card: "#FFF",
           text: "#333",
-          border: "#CCC",
-          notification: "#DE3163",
         },
       }}
     >
@@ -328,7 +402,6 @@ export default function SimulationScreen() {
                     style={styles.cardButton}
                     onPress={() => {
                       setSelected(i.key);
-                      setValues({});
                       setResult(null);
                     }}
                   >
@@ -363,15 +436,14 @@ export default function SimulationScreen() {
                         <Text style={styles.inputLabel}>{inp.label}</Text>
                         {inp.type === "dropdown" ? (
                           <Picker
-                            selectedValue={
-                              values[inp.key] !== undefined
-                                ? values[inp.key]
-                                : ""
-                            }
-                            onValueChange={(v: any) => onChange(inp.key, v)}
+                            selectedValue={values[inp.key] || ""}
+                            onValueChange={(v) => onChange(inp.key, v)}
                             style={styles.input}
                           >
-                            <Picker.Item label="Select" value="" />
+                            <Picker.Item
+                              label={`Select ${inp.label}`}
+                              value=""
+                            />
                             {inp.options!.map((o) => (
                               <Picker.Item key={o} label={o} value={o} />
                             ))}
@@ -381,11 +453,7 @@ export default function SimulationScreen() {
                             style={styles.input}
                             placeholder={inp.placeholder}
                             keyboardType="numeric"
-                            value={
-                              values[inp.key] !== undefined
-                                ? values[inp.key].toString()
-                                : ""
-                            }
+                            value={values[inp.key] || ""}
                             onChangeText={(t) => onChange(inp.key, t)}
                           />
                         )}
@@ -429,6 +497,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
     marginVertical: 20,
+    marginTop: 48,
   },
   container: { paddingHorizontal: 20, paddingBottom: 40 },
   subtitle: {
@@ -501,11 +570,20 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: "center",
   },
-  chartContainer: {
-    alignItems: "center",
-    overflow: "hidden",
-    borderRadius: 12,
-    marginVertical: 10,
-  },
+  chartScroll: { marginVertical: 10 },
   chart: { borderRadius: 12 },
+  chartFallback: {
+    marginVertical: 10,
+    padding: 16,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  fallbackText: { fontSize: 14, color: "#333", textAlign: "center" },
+  fallbackSubText: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 8,
+    textAlign: "center",
+  },
 });
