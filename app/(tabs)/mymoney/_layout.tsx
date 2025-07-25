@@ -1,71 +1,96 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Tabs } from "expo-router";
+import React from "react";
 
-export default function MyMoneyLayout() {
+import { TabBarIcon } from "@/components/navigation/TabBarIcon";
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { ExpenseTrackerProvider } from "../../src/context/ExpenseTrackerContext";
+
+export default function TabLayout() {
+  const colorScheme = useColorScheme();
+
   return (
-    <Tabs
-      screenOptions={({ route }) => ({
-        tabBarActiveTintColor: '#007AFF', // Active tint color
-        tabBarInactiveTintColor: 'gray',  // Inactive tint color
-        headerShown: true,
-        tabBarIcon: ({ color, focused, size }) => {
-          let iconName = '';
+    <ExpenseTrackerProvider>
+      <Tabs
+        initialRouteName="news"
+        screenOptions={{
+          tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+          headerShown: false,
+        }}
+      >
+        {/* Remove Home tab */}
+        {/* <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+@@ -30,70 +26,67 @@
+            />
+          ),
+        }}
+      /> */}
+        <Tabs.Screen
+          name="mymoney"
+          options={{
+            title: "My Money",
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon
+                name={focused ? "wallet" : "wallet-outline"}
+                color={color}
+              />
+            ),
+            headerShown: false, // We'll handle header inside nested tabs
+          }}
+        />
 
-          switch (route.name) {
-            case 'records':
-              iconName = focused ? 'list' : 'list-outline';
-              break;
-            case 'analysis':
-              iconName = focused ? 'pie-chart' : 'pie-chart-outline';
-              break;
-            case 'budgets':
-              iconName = focused ? 'wallet' : 'wallet-outline';
-              break;
-            case 'accounts':
-              iconName = focused ? 'card' : 'card-outline';
-              break;
-            case 'categories':
-              iconName = focused ? 'albums' : 'albums-outline';
-              break;
-            default:
-              iconName = 'ellipse';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-      })}
-    >
-      <Tabs.Screen
-        name="records"
-        options={{
-          title: 'Records',
-        }}
-      />
-      <Tabs.Screen
-        name="analysis"
-        options={{
-          title: 'Analysis',
-        }}
-      />
-      <Tabs.Screen
-        name="budgets"
-        options={{
-          title: 'Budgets',
-        }}
-      />
-      <Tabs.Screen
-        name="accounts"
-        options={{
-          title: 'Accounts',
-        }}
-      />
-      <Tabs.Screen
-        name="categories"
-        options={{
-          title: 'Categories',
-        }}
-      />
-    </Tabs>
+        <Tabs.Screen
+          name="chatbot"
+          options={{
+            title: "ChatBot",
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon
+                name={focused ? "laptop" : "laptop-outline"}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="news"
+          options={{
+            title: "News",
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon
+                name={focused ? "newspaper" : "newspaper-outline"}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="trivia"
+          options={{
+            title: "Trivia",
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon
+                name={focused ? "game-controller" : "game-controller-outline"}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="simulator"
+          options={{
+            title: "Simulator",
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon
+                name={focused ? "trending-up" : "trending-up-outline"}
+                color={color}
+              />
+            ),
+          }}
+        />
+      </Tabs>
+    </ExpenseTrackerProvider>
   );
 }
