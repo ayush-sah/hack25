@@ -130,13 +130,16 @@ const HomeScreen = () => {
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
             <Text
-              style={[styles.headerTitle, {
-                color: "#00B6F0",
-                fontFamily: "System",
-                fontWeight: "bold",
-                fontSize: 32,
-                letterSpacing: 0.5,
-              }]}
+              style={[
+                styles.headerTitle,
+                {
+                  color: "#00B6F0",
+                  fontFamily: "System",
+                  fontWeight: "bold",
+                  fontSize: 32,
+                  letterSpacing: 0.5,
+                },
+              ]}
             >
               FinWorld
             </Text>
@@ -148,9 +151,19 @@ const HomeScreen = () => {
       </View>
       {/* Welcome Message */}
       <View style={styles.welcomeContainer}>
-        <Text style={styles.welcomeText}>Welcome to FinWorld grow easy with FinWorld</Text>
+        <Text style={styles.welcomeText}>
+          Welcome to FinWorld grow easy with FinWorld
+        </Text>
       </View>
       <View style={styles.container}>
+        {/* Welcome Message */}
+        <View style={styles.welcomeContainer}>
+          <Text style={styles.welcomeTitle}>Welcome to</Text>
+          <Text style={styles.welcomeFinWorld}>FinWorld</Text>
+          <Text style={styles.welcomeSubtitle}>
+            Your journey to financial wisdom starts here!
+          </Text>
+        </View>
         <FlatList
           data={[]} // Empty data as tileData is removed
           renderItem={renderTile}
@@ -438,15 +451,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   welcomeContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 10,
     marginBottom: 18,
   },
   welcomeText: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#008080',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#008080",
+    textAlign: "center",
     letterSpacing: 0.2,
   },
 });
