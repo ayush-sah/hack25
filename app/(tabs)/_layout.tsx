@@ -28,18 +28,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="cashflow"
-        options={{
-          title: "Cash Flow",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon
-              name={focused ? "wallet" : "wallet-outline"}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="chatbot"
         options={{
           title: "ChatBot",
@@ -87,6 +75,20 @@ export default function TabLayout() {
           ),
         }}
       />
+      {/* New MyMoney tab */}
+        <Tabs.Screen
+          name="mymoney"
+          options={{
+            title: "My Money",
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon
+                name={focused ? "wallet" : "wallet-outline"}
+                color={color}
+              />
+            ),
+            headerShown: false, // We'll handle header inside nested tabs
+          }}
+        />
     </Tabs>
   );
 }
