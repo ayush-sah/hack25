@@ -34,7 +34,7 @@ const HomeScreen = () => {
   const [tipLoading, setTipLoading] = useState(false);
 
   const { isAuthenticated, logout, cancelRegister } = useAuth();
-  const logo = require("../../assets/images/logo.png");
+  const logo = require("../../assets/images/FinWorld.png");
 
   // Gemini API config (reuse from chatbot)
   // const bearerToken = ""; // Add your Gemini API key here

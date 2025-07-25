@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Image,
 } from "react-native";
 import { useAuth } from "@/context/context";
 import { Feather } from "@expo/vector-icons";
@@ -15,7 +16,7 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { login, logout, redirectToRegister } = useAuth();
 
   const handleLogin = () => {
-    if (username.trim() === 'admin' && password === 'admin') {
+    if (username.trim() === "admin" && password === "admin") {
       login();
       redirectToRegister();
       // navigation.replace('index'); // Navigate to Home after login
@@ -32,7 +33,17 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <View style={{ alignItems: "center", marginBottom: 16 }}>
+        <Image
+          source={require("../assets/images/FinWorld.png")}
+          style={{
+            width: 200,
+            height: 200,
+            resizeMode: "contain",
+            marginBottom: 8,
+          }}
+        />
+      </View>
       <View style={styles.inputContainer}>
         <Feather name="user" size={24} color="#008080" style={styles.icon} />
         <TextInput
