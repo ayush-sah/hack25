@@ -130,16 +130,13 @@ const HomeScreen = () => {
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
             <Text
-              style={[
-                styles.headerTitle,
-                {
-                  color: "#00B6F0",
-                  fontFamily: "System",
-                  fontWeight: "bold",
-                  fontSize: 32,
-                  letterSpacing: 0.5,
-                },
-              ]}
+              style={[styles.headerTitle, {
+                color: "#00B6F0",
+                fontFamily: "System",
+                fontWeight: "bold",
+                fontSize: 32,
+                letterSpacing: 0.5,
+              }]}
             >
               FinWorld
             </Text>
@@ -148,6 +145,10 @@ const HomeScreen = () => {
             <Feather name="log-out" size={24} color="#00B6F0" />
           </TouchableOpacity>
         </View>
+      </View>
+      {/* Welcome Message */}
+      <View style={styles.welcomeContainer}>
+        <Text style={styles.welcomeText}>Welcome to FinWorld grow easy with FinWorld</Text>
       </View>
       <View style={styles.container}>
         <FlatList
@@ -308,7 +309,6 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
     paddingTop: StatusBar.currentHeight || 0,
     backgroundColor: "#ECF0F1",
   },
@@ -436,6 +436,18 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: "white",
     fontWeight: "bold",
+  },
+  welcomeContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 18,
+  },
+  welcomeText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#008080',
+    textAlign: 'center',
+    letterSpacing: 0.2,
   },
 });
 
