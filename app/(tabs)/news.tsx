@@ -43,7 +43,7 @@ const languages = [
   { label: "Vietnamese", value: "vi" },
 ];
 
-const NEWS_API_KEY = "";
+const NEWS_API_KEY = "de00cd4ca3cb4d22a5a9aae734833d6b";
 const NEWS_API_URL = "https://newsapi.org/v2/everything";
 
 type Article = {
@@ -184,109 +184,109 @@ const NewsScreen = () => {
     en: {
       stayInformed: "Stay Informed",
       selectLanguage: "Select Language",
-      newsTitle: "Financial Inclusion News",
+      newsTitle: "Financial News",
       loadError: "Could not load news articles.",
     },
     de: {
       stayInformed: "Bleiben Sie informiert",
       selectLanguage: "Sprache auswählen",
-      newsTitle: "Nachrichten zur finanziellen Inklusion",
+      newsTitle: "Finanznachrichten",
       loadError: "Nachrichtenartikel konnten nicht geladen werden.",
     },
     es: {
       stayInformed: "Mantente informado",
       selectLanguage: "Seleccionar idioma",
-      newsTitle: "Noticias de inclusión financiera",
+      newsTitle: "Noticias financieras",
       loadError: "No se pudieron cargar las noticias.",
     },
     fr: {
       stayInformed: "Restez informé",
       selectLanguage: "Choisir la langue",
-      newsTitle: "Actualités sur l'inclusion financière",
+      newsTitle: "Actualités financières",
       loadError: "Impossible de charger les articles de presse.",
     },
     hi: {
       stayInformed: "सूचित रहें",
       selectLanguage: "भाषा चुनें",
-      newsTitle: "वित्तीय समावेशन समाचार",
+      newsTitle: "वित्तीय समाचार",
       loadError: "समाचार लोड नहीं हो सके।",
     },
     zh: {
       stayInformed: "保持关注",
       selectLanguage: "选择语言",
-      newsTitle: "金融包容性新闻",
+      newsTitle: "金融新闻",
       loadError: "无法加载新闻文章。",
     },
     bn: {
       stayInformed: "সতর্ক থাকুন",
       selectLanguage: "ভাষা নির্বাচন করুন",
-      newsTitle: "আর্থিক অন্তর্ভুক্তি সংবাদ",
+      newsTitle: "আর্থিক সংবাদ",
       loadError: "সংবাদ লোড করা যায়নি।",
     },
     jp: {
       stayInformed: "最新情報を入手",
       selectLanguage: "言語を選択",
-      newsTitle: "金融包摂ニュース",
+      newsTitle: "金融ニュース",
       loadError: "ニュース記事を読み込めませんでした。",
     },
     tr: {
       stayInformed: "Haberdar Olun",
       selectLanguage: "Dil Seçin",
-      newsTitle: "Finansal Kapsayıcılık Haberleri",
+      newsTitle: "Finans Haberleri",
       loadError: "Haberler yüklenemedi.",
     },
     cz: {
       stayInformed: "Zůstaňte informováni",
       selectLanguage: "Vyberte jazyk",
-      newsTitle: "Zprávy o finanční inkluzi",
+      newsTitle: "Finanční zprávy",
       loadError: "Nelze načíst zprávy.",
     },
     fi: {
       stayInformed: "Pysy ajan tasalla",
       selectLanguage: "Valitse kieli",
-      newsTitle: "Rahoituksellisen osallisuuden uutiset",
+      newsTitle: "Rahoitusuutiset",
       loadError: "Uutisia ei voitu ladata.",
     },
     hu: {
       stayInformed: "Maradjon tájékozott",
       selectLanguage: "Válasszon nyelvet",
-      newsTitle: "Pénzügyi befogadás hírek",
+      newsTitle: "Pénzügyi hírek",
       loadError: "A híreket nem sikerült betölteni.",
     },
     id: {
       stayInformed: "Tetap Terinformasi",
       selectLanguage: "Pilih Bahasa",
-      newsTitle: "Berita Inklusi Keuangan",
+      newsTitle: "Berita Keuangan",
       loadError: "Berita tidak dapat dimuat.",
     },
     ko: {
       stayInformed: "정보를 받아보세요",
       selectLanguage: "언어 선택",
-      newsTitle: "금융 포용 뉴스",
+      newsTitle: "금융 뉴스",
       loadError: "뉴스 기사를 불러올 수 없습니다.",
     },
     sk: {
       stayInformed: "Zostaňte informovaní",
       selectLanguage: "Vyberte jazyk",
-      newsTitle: "Správy o finančnej inklúzii",
+      newsTitle: "Finančné správy",
       loadError: "Nepodarilo sa načítať správy.",
     },
     th: {
       stayInformed: "รับข้อมูลข่าวสาร",
       selectLanguage: "เลือกภาษา",
-      newsTitle: "ข่าวการรวมทางการเงิน",
+      newsTitle: "ข่าวการเงิน",
       loadError: "ไม่สามารถโหลดข่าวได้",
     },
     pt: {
       stayInformed: "Fique informado",
       selectLanguage: "Selecionar idioma",
-      newsTitle: "Notícias de inclusão financeira",
+      newsTitle: "Notícias financeiras",
       loadError: "Não foi possível carregar as notícias.",
     },
     ru: {
       stayInformed: "Будьте в курсе",
       selectLanguage: "Выберите язык",
-      newsTitle: "Новости финансовой инклюзии",
+      newsTitle: "Финансовые новости",
       loadError: "Не удалось загрузить новости.",
     },
   };
