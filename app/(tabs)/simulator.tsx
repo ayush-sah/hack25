@@ -9,8 +9,8 @@ import {
   TextInput,
   Dimensions,
   Platform,
-  Picker,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { ThemeProvider } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -429,6 +429,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
     marginVertical: 20,
+    marginTop: 48, // Added extra top margin to prevent going beyond top
   },
   container: { paddingHorizontal: 20, paddingBottom: 40 },
   subtitle: {

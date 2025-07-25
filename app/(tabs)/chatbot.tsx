@@ -321,6 +321,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 20,
     paddingVertical: 15,
+    paddingTop: 40, // Added top padding to prevent going beyond top
     borderBottomWidth: 1,
     borderBottomColor: "#BDC3C7",
     backgroundColor: "#FFFFFF",

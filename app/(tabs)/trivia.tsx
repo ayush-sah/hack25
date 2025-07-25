@@ -1267,6 +1267,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     backgroundColor: "#F8F9FA",
+    paddingTop: 48, // Added top padding to prevent going beyond top
   },
   bannerRow: {
     flexDirection: "row",
