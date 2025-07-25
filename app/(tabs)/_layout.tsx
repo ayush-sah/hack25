@@ -4,11 +4,13 @@ import React from "react";
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { ExpenseTrackerProvider } from '../src/context/ExpenseTrackerContext';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
+    <ExpenseTrackerProvider>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
@@ -88,5 +90,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    </ExpenseTrackerProvider>
   );
 }
