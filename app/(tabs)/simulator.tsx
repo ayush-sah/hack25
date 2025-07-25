@@ -497,6 +497,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
     marginVertical: 20,
+    marginTop: 48,
   },
   container: { paddingHorizontal: 20, paddingBottom: 40 },
   subtitle: {
