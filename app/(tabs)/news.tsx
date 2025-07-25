@@ -363,7 +363,7 @@ const NewsScreen = () => {
   return (
     <View style={styles.gradientBg}>
       {/* Finance Tip Modal */}
-      <Modal
+      {/* <Modal
         animationType="slide"
         transparent={true}
         visible={tipModalVisible}
@@ -475,7 +475,7 @@ const NewsScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
       <View style={styles.bannerContainer}>
         <Image
           source={require("../../assets/images/news-icon.png")}
