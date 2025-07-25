@@ -30,17 +30,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="cashflow"
-        options={{
-          title: "Cash Flow",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon
-              name={focused ? "wallet" : "wallet-outline"}
-              color={color}
-            />
-          ),
-        }}
-      />
+          name="mymoney"
+          options={{
+            title: "My Money",
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon
+                name={focused ? "wallet" : "wallet-outline"}
+                color={color}
+              />
+            ),
+            headerShown: false, // We'll handle header inside nested tabs
+          }}
+        />
+
       <Tabs.Screen
         name="chatbot"
         options={{
