@@ -75,6 +75,18 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="simulator"
+        options={{
+          title: "Simulator",
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              name={focused ? "trending-up" : "trending-up-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

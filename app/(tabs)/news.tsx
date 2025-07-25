@@ -42,7 +42,7 @@ const languages = [
   { label: "Vietnamese", value: "vi" },
 ];
 
-const NEWS_API_KEY = "de00cd4ca3cb4d22a5a9aae734833d6b";
+const NEWS_API_KEY = "";
 const NEWS_API_URL = "https://newsapi.org/v2/everything";
 
 type Article = {
