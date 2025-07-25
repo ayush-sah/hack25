@@ -68,16 +68,15 @@ const NewsScreen = () => {
   const [hasMore, setHasMore] = useState(true);
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const loadMoreScale = useRef(new Animated.Value(1)).current;
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('finance');
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("finance");
 
   // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
-      if(search==''){
-        setDebouncedSearch('finance');
-      }
-      else{
+      if (search == "") {
+        setDebouncedSearch("finance");
+      } else {
         setDebouncedSearch(search);
       }
     }, 1000);
@@ -545,16 +544,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   searchInput: {
-    width: '100%',
+    width: "100%",
     height: 40,
-    borderColor: 'rgb(0, 128, 128)',
+    borderColor: "rgb(0, 128, 128)",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 12,
     marginTop: 12,
     marginBottom: 4,
-    backgroundColor: '#f5f5f5',
-    color: '#222',
+    backgroundColor: "#f5f5f5",
+    color: "#222",
     fontSize: 16,
   },
 });
