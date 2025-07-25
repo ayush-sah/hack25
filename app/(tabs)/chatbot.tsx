@@ -32,7 +32,7 @@ const ChatbotTab = () => {
     }
   }, [chat]);
 
-  const apiKey = "AIzaSyD6cJhxDKJSV90zYjPqq46FgFTQrSViLhU";
+  const apiKey = "";
   const apiUrl =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
