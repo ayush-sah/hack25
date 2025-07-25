@@ -129,13 +129,23 @@ const HomeScreen = () => {
       <View style={styles.headerContainer}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Image source={logo} style={styles.logo} />
-            <Text style={[styles.headerTitle, { color: "#DE3163" }]}>
+            <Text
+              style={[
+                styles.headerTitle,
+                {
+                  color: "#00B6F0",
+                  fontFamily: "System",
+                  fontWeight: "bold",
+                  fontSize: 32,
+                  letterSpacing: 0.5,
+                },
+              ]}
+            >
               FinWorld
             </Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
-            <Feather name="log-out" size={24} color="#DE3163" />
+            <Feather name="log-out" size={24} color="#00B6F0" />
           </TouchableOpacity>
         </View>
       </View>
