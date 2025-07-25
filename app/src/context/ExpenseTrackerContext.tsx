@@ -1,10 +1,10 @@
-import React, { createContext, useReducer, ReactNode } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import React, { createContext, useReducer, ReactNode } from "react";
+import uuid from "react-native-uuid";
 
 // Define types
 type Record = {
   id: string;
-  type: 'expense' | 'income';
+  type: "expense" | "income";
   date: string;
   amount: number;
   currency: string;
@@ -23,14 +23,14 @@ type Account = {
 type Category = {
   id: string;
   name: string;
-  type: 'expense' | 'income';
+  type: "expense" | "income";
 };
 
 type Budget = {
   id: string;
   categoryId: string;
   amount: number;
-  period: 'weekly' | 'monthly';
+  period: "weekly" | "monthly";
 };
 
 type State = {
@@ -41,29 +41,29 @@ type State = {
 };
 
 type Action =
-  | { type: 'ADD_RECORD'; payload: Record }
-  | { type: 'ADD_ACCOUNT'; payload: Account }
-  | { type: 'UPDATE_ACCOUNT'; payload: Account }
-  | { type: 'ADD_CATEGORY'; payload: Category }
-  | { type: 'ADD_BUDGET'; payload: Budget };
+  | { type: "ADD_RECORD"; payload: Record }
+  | { type: "ADD_ACCOUNT"; payload: Account }
+  | { type: "UPDATE_ACCOUNT"; payload: Account }
+  | { type: "ADD_CATEGORY"; payload: Category }
+  | { type: "ADD_BUDGET"; payload: Budget };
 
 // Initial data
 const initialCategories: Category[] = [
-  { id: uuidv4(), name: 'Groceries', type: 'expense' },
-  { id: uuidv4(), name: 'Rent', type: 'expense' },
-  { id: uuidv4(), name: 'Utilities', type: 'expense' },
-  { id: uuidv4(), name: 'Transportation', type: 'expense' },
-  { id: uuidv4(), name: 'Entertainment', type: 'expense' },
-  { id: uuidv4(), name: 'Dining Out', type: 'expense' },
-  { id: uuidv4(), name: 'Salary', type: 'income' },
-  { id: uuidv4(), name: 'Freelance', type: 'income' },
-  { id: uuidv4(), name: 'Investments', type: 'income' },
+  { id: uuid.v4(), name: "Groceries", type: "expense" },
+  { id: uuid.v4(), name: "Rent", type: "expense" },
+  { id: uuid.v4(), name: "Utilities", type: "expense" },
+  { id: uuid.v4(), name: "Transportation", type: "expense" },
+  { id: uuid.v4(), name: "Entertainment", type: "expense" },
+  { id: uuid.v4(), name: "Dining Out", type: "expense" },
+  { id: uuid.v4(), name: "Salary", type: "income" },
+  { id: uuid.v4(), name: "Freelance", type: "income" },
+  { id: uuid.v4(), name: "Investments", type: "income" },
 ];
 
 const initialAccounts: Account[] = [
-  { id: uuidv4(), name: 'Checking', balance: 1000.00, currency: 'USD' },
-  { id: uuidv4(), name: 'Savings', balance: 5000.00, currency: 'USD' },
-  { id: uuidv4(), name: 'Cash', balance: 200.00, currency: 'USD' },
+  { id: uuid.v4(), name: "Checking", balance: 1000.0, currency: "USD" },
+  { id: uuid.v4(), name: "Savings", balance: 5000.0, currency: "USD" },
+  { id: uuid.v4(), name: "Cash", balance: 200.0, currency: "USD" },
 ];
 
 const initialState: State = {
@@ -76,20 +76,20 @@ const initialState: State = {
 // Reducer function
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case 'ADD_RECORD':
+    case "ADD_RECORD":
       return { ...state, records: [...state.records, action.payload] };
-    case 'ADD_ACCOUNT':
+    case "ADD_ACCOUNT":
       return { ...state, accounts: [...state.accounts, action.payload] };
-    case 'UPDATE_ACCOUNT':
+    case "UPDATE_ACCOUNT":
       return {
         ...state,
         accounts: state.accounts.map((account) =>
           account.id === action.payload.id ? action.payload : account
         ),
       };
-    case 'ADD_CATEGORY':
+    case "ADD_CATEGORY":
       return { ...state, categories: [...state.categories, action.payload] };
-    case 'ADD_BUDGET':
+    case "ADD_BUDGET":
       return { ...state, budgets: [...state.budgets, action.payload] };
     default:
       return state;
@@ -108,7 +108,11 @@ export const ExpenseTrackerContext = createContext<ExpenseTrackerContextType>({
 });
 
 // Provider component
-export const ExpenseTrackerProvider = ({ children }: { children: ReactNode }) => {
+export const ExpenseTrackerProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   return (

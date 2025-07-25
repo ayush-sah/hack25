@@ -1,26 +1,33 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, FlatList, TextInput, Button, StyleSheet } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { ExpenseTrackerContext } from '../../src/context/ExpenseTrackerContext';
-import { v4 as uuidv4 } from 'uuid';
+import React, { useContext, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  Button,
+  StyleSheet,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { ExpenseTrackerContext } from "../../src/context/ExpenseTrackerContext";
+import uuid from "react-native-uuid";
 
 export default function CategoriesScreen() {
   const { state, dispatch } = useContext(ExpenseTrackerContext);
-  const [name, setName] = useState('');
-  const [type, setType] = useState<'expense' | 'income'>('expense');
+  const [name, setName] = useState("");
+  const [type, setType] = useState<"expense" | "income">("expense");
 
   function addCategory() {
     if (!name) return;
 
     const newCategory = {
-      id: uuidv4(),
+      id: uuid.v4(),
       name,
       type,
     };
 
-    dispatch({ type: 'ADD_CATEGORY', payload: newCategory });
+    dispatch({ type: "ADD_CATEGORY", payload: newCategory });
 
-    setName('');
+    setName("");
   }
 
   return (
@@ -57,7 +64,13 @@ export default function CategoriesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  item: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#ccc' },
-  input: { borderWidth: 1, borderColor: '#ccc', marginBottom: 12, padding: 8, borderRadius: 4 },
+  item: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#ccc" },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 12,
+    padding: 8,
+    borderRadius: 4,
+  },
   picker: { marginBottom: 12 },
 });

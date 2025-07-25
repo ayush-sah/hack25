@@ -1,43 +1,58 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Alert, Dimensions } from 'react-native';
-import { ExpenseTrackerContext } from '../../src/context/ExpenseTrackerContext';
-import { v4 as uuidv4 } from 'uuid';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useContext, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  Alert,
+  Dimensions,
+} from "react-native";
+import { ExpenseTrackerContext } from "../../src/context/ExpenseTrackerContext";
+import uuid from "react-native-uuid";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function AccountsScreen() {
   const { state, dispatch } = useContext(ExpenseTrackerContext);
-  const [name, setName] = useState('');
-  const [balance, setBalance] = useState('');
-  const [currency, setCurrency] = useState('USD');
+  const [name, setName] = useState("");
+  const [balance, setBalance] = useState("");
+  const [currency, setCurrency] = useState("USD");
   const [showForm, setShowForm] = useState(false);
 
   function addAccount() {
     if (!name.trim()) {
-      Alert.alert('Invalid Name', 'Please enter a valid account name.');
+      Alert.alert("Invalid Name", "Please enter a valid account name.");
       return;
     }
     if (!balance || isNaN(parseFloat(balance)) || parseFloat(balance) < 0) {
-      Alert.alert('Invalid Balance', 'Please enter a valid non-negative number for the balance (e.g., 100.00).');
+      Alert.alert(
+        "Invalid Balance",
+        "Please enter a valid non-negative number for the balance (e.g., 100.00)."
+      );
       return;
     }
     if (!currency.trim() || !/^[A-Z]{3}$/.test(currency.trim())) {
-      Alert.alert('Invalid Currency', 'Please enter a valid 3-letter currency code (e.g., USD).');
+      Alert.alert(
+        "Invalid Currency",
+        "Please enter a valid 3-letter currency code (e.g., USD)."
+      );
       return;
     }
 
     const newAccount = {
-      id: uuidv4(),
+      id: uuid.v4(),
       name: name.trim(),
       balance: parseFloat(balance),
       currency: currency.trim().toUpperCase(),
     };
 
-    dispatch({ type: 'ADD_ACCOUNT', payload: newAccount });
-    setName('');
-    setBalance('');
-    setCurrency('USD');
+    dispatch({ type: "ADD_ACCOUNT", payload: newAccount });
+    setName("");
+    setBalance("");
+    setCurrency("USD");
     setShowForm(false);
-    Alert.alert('Success', 'Account added successfully!', [{ text: 'OK' }]);
+    Alert.alert("Success", "Account added successfully!", [{ text: "OK" }]);
   }
 
   const recentAccounts = state.accounts.slice(0, 5);
@@ -54,7 +69,14 @@ export default function AccountsScreen() {
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Your Accounts</Text>
                 {state.accounts.length > 5 && (
-                  <TouchableOpacity onPress={() => Alert.alert('Info', 'Full account list can be viewed in a detailed view (coming soon).')}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      Alert.alert(
+                        "Info",
+                        "Full account list can be viewed in a detailed view (coming soon)."
+                      )
+                    }
+                  >
                     <Text style={styles.viewMore}>View More</Text>
                   </TouchableOpacity>
                 )}
@@ -66,11 +88,14 @@ export default function AccountsScreen() {
           <View style={styles.accountItem}>
             <Text style={styles.accountText}>{item.name}</Text>
             <Text style={styles.accountBalance}>
-              {item.balance < 0 ? '-' : ''}${Math.abs(item.balance).toFixed(2)} {item.currency}
+              {item.balance < 0 ? "-" : ""}${Math.abs(item.balance).toFixed(2)}{" "}
+              {item.currency}
             </Text>
           </View>
         )}
-        ListEmptyComponent={<Text style={styles.emptyText}>No accounts added yet.</Text>}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No accounts added yet.</Text>
+        }
         contentContainerStyle={styles.listContent}
       />
       {showForm && (
@@ -106,10 +131,23 @@ export default function AccountsScreen() {
           <TouchableOpacity
             style={[
               styles.addButton,
-              (!name.trim() || !balance || isNaN(parseFloat(balance)) || parseFloat(balance) < 0 || !currency.trim() || !/^[A-Z]{3}$/.test(currency.trim())) && styles.addButtonDisabled,
+              (!name.trim() ||
+                !balance ||
+                isNaN(parseFloat(balance)) ||
+                parseFloat(balance) < 0 ||
+                !currency.trim() ||
+                !/^[A-Z]{3}$/.test(currency.trim())) &&
+                styles.addButtonDisabled,
             ]}
             onPress={addAccount}
-            disabled={!name.trim() || !balance || isNaN(parseFloat(balance)) || parseFloat(balance) < 0 || !currency.trim() || !/^[A-Z]{3}$/.test(currency.trim())}
+            disabled={
+              !name.trim() ||
+              !balance ||
+              isNaN(parseFloat(balance)) ||
+              parseFloat(balance) < 0 ||
+              !currency.trim() ||
+              !/^[A-Z]{3}$/.test(currency.trim())
+            }
           >
             <Text style={styles.addButtonText}>Add Account</Text>
           </TouchableOpacity>
@@ -119,7 +157,7 @@ export default function AccountsScreen() {
         style={styles.fab}
         onPress={() => setShowForm(!showForm)}
       >
-        <Ionicons name={showForm ? 'close' : 'add'} size={24} color="#fff" />
+        <Ionicons name={showForm ? "close" : "add"} size={24} color="#fff" />
       </TouchableOpacity>
     </View>
   );
@@ -128,7 +166,7 @@ export default function AccountsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   listContent: {
     paddingBottom: 80, // Space for FAB
@@ -136,117 +174,117 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginVertical: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   sectionContainer: {
     marginBottom: 8,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
+    color: "#333",
   },
   viewMore: {
     fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '500',
+    color: "#007AFF",
+    fontWeight: "500",
   },
   accountItem: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    shadowColor: '#000',
+    borderColor: "#ddd",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   accountText: {
     fontSize: 14,
-    color: '#333',
+    color: "#333",
   },
   accountBalance: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
+    color: "#333",
   },
   formContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
-    maxHeight: Dimensions.get('window').height * 0.5,
+    maxHeight: Dimensions.get("window").height * 0.5,
   },
   formHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     marginBottom: 8,
     padding: 10,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     fontSize: 14,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
   addButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
   },
   addButtonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
   },
   addButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   fab: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 16,
     right: 16,
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     width: 56,
     height: 56,
     borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -254,13 +292,13 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
 });
