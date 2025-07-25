@@ -14,8 +14,11 @@ import {
   Easing,
   Dimensions,
   TextInput,
+  Modal,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { useAuth } from "../../context/context";
+import axios from "axios";
 
 const languages = [
   { label: "German", value: "de" },
@@ -43,7 +46,7 @@ const languages = [
   { label: "Vietnamese", value: "vi" },
 ];
 
-const NEWS_API_KEY = "de00cd4ca3cb4d22a5a9aae734833d6b";
+const NEWS_API_KEY = "de661e8b71bd4a4d8ed99ecc6c70edbf";
 const NEWS_API_URL = "https://newsapi.org/v2/everything";
 
 type Article = {
@@ -70,6 +73,69 @@ const NewsScreen = () => {
   const loadMoreScale = useRef(new Animated.Value(1)).current;
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("finance");
+  const { isAuthenticated } = useAuth();
+  const [tipModalVisible, setTipModalVisible] = useState(false);
+  const [financeTip, setFinanceTip] = useState("");
+  const [tipLoading, setTipLoading] = useState(false);
+
+  // Gemini API config
+  const bearerToken = "AIzaSyD6cJhxDKJSV90zYjPqq46FgFTQrSViLhU"; // Replace with your Gemini API key
+  const apiUrl =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+
+  // Fetch a single finance tip when user logs in
+  const fetchFinanceTip = React.useCallback(() => {
+    setFinanceTip("");
+    setTipLoading(true);
+    const randomizer = Math.floor(Math.random() * 1000000);
+    const prompt = `Give only one very short (1-2 line), practical tip that increases the financial knowledge of a layman. The tip should be creative, actionable, and easy to understand. Do not return a list or multiple tips, just one. (Session: ${randomizer}) Answer in English.`;
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        "X-goog-api-key": `${bearerToken}`,
+      },
+    };
+    const payload = JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: {
+            text: prompt,
+          },
+        },
+      ],
+      generationConfig: {
+        temperature: 1.08,
+        topP: 0.3,
+        topK: 40,
+        candidateCount: 1,
+        maxOutputTokens: 200,
+        presencePenalty: 1.0,
+        frequencyPenalty: -1.0,
+        responseMimeType: "text/plain",
+      },
+    });
+    axios
+      .post(apiUrl, payload, config)
+      .then((response) => {
+        const responseData = response.data;
+        const textContent =
+          responseData.candidates?.[0]?.content?.parts?.[0]?.text ||
+          "No tip available.";
+        setFinanceTip(textContent);
+      })
+      .catch(() => {
+        setFinanceTip("Sorry, could not fetch tip. Try again later.");
+      })
+      .finally(() => setTipLoading(false));
+  }, [bearerToken, apiUrl]);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      setTipModalVisible(true);
+      fetchFinanceTip();
+    }
+  }, [isAuthenticated, fetchFinanceTip]);
 
   // Debounce search input
   useEffect(() => {
@@ -296,6 +362,120 @@ const NewsScreen = () => {
 
   return (
     <View style={styles.gradientBg}>
+      {/* Finance Tip Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={tipModalVisible}
+        onRequestClose={() => setTipModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.4)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: 20,
+              padding: 28,
+              width: 340,
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+              elevation: 8,
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: "#e0f7fa",
+                borderRadius: 50,
+                padding: 16,
+                marginBottom: 12,
+              }}
+            >
+              <Image
+                source={require("../../assets/images/news-icon.png")}
+                style={{ width: 40, height: 40 }}
+              />
+            </View>
+            <Text
+              style={{
+                fontSize: 22,
+                fontWeight: "bold",
+                marginBottom: 10,
+                color: "#008080",
+                textAlign: "center",
+                letterSpacing: 0.5,
+              }}
+            >
+              Finance Tip
+            </Text>
+            {tipLoading ? (
+              <ActivityIndicator
+                size="large"
+                color="#008080"
+                style={{ marginVertical: 24 }}
+              />
+            ) : (
+              <Text
+                style={{
+                  fontSize: 18,
+                  color: "#222",
+                  marginBottom: 24,
+                  textAlign: "center",
+                  fontWeight: "500",
+                  lineHeight: 26,
+                }}
+              >
+                {financeTip.split(/(\*[^*]+\*)/g).map((part, idx) => {
+                  if (/^\*[^*]+\*$/.test(part)) {
+                    return (
+                      <Text
+                        key={idx}
+                        style={{ fontWeight: "bold", color: "#008080" }}
+                      >
+                        {part.slice(1, -1)}
+                      </Text>
+                    );
+                  }
+                  return part;
+                })}
+              </Text>
+            )}
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#008080",
+                paddingHorizontal: 36,
+                paddingVertical: 12,
+                borderRadius: 24,
+                shadowColor: "#008080",
+                shadowOpacity: 0.18,
+                shadowRadius: 6,
+                elevation: 2,
+              }}
+              onPress={() => setTipModalVisible(false)}
+              activeOpacity={0.85}
+              disabled={tipLoading}
+            >
+              <Text
+                style={{
+                  color: "#fff",
+                  fontWeight: "bold",
+                  fontSize: 16,
+                  letterSpacing: 0.2,
+                }}
+              >
+                Dismiss
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       <View style={styles.bannerContainer}>
         <Image
           source={require("../../assets/images/news-icon.png")}

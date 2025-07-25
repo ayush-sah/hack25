@@ -4,20 +4,22 @@ import React from "react";
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { ExpenseTrackerProvider } from '../src/context/ExpenseTrackerContext';
+import { ExpenseTrackerProvider } from "../src/context/ExpenseTrackerContext";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
     <ExpenseTrackerProvider>
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        headerShown: false,
-      }}
-    >
-      <Tabs.Screen
+      <Tabs
+        initialRouteName="news"
+        screenOptions={{
+          tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+          headerShown: false,
+        }}
+      >
+        {/* Remove Home tab */}
+        {/* <Tabs.Screen
         name="index"
         options={{
           title: "Home",
@@ -28,8 +30,8 @@ export default function TabLayout() {
             />
           ),
         }}
-      />
-      <Tabs.Screen
+      /> */}
+        <Tabs.Screen
           name="mymoney"
           options={{
             title: "My Money",
@@ -43,55 +45,55 @@ export default function TabLayout() {
           }}
         />
 
-      <Tabs.Screen
-        name="chatbot"
-        options={{
-          title: "ChatBot",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon
-              name={focused ? "laptop" : "laptop-outline"}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="news"
-        options={{
-          title: "News",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon
-              name={focused ? "newspaper" : "newspaper-outline"}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="trivia"
-        options={{
-          title: "Trivia",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon
-              name={focused ? "game-controller" : "game-controller-outline"}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="simulator"
-        options={{
-          title: "Simulator",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon
-              name={focused ? "trending-up" : "trending-up-outline"}
-              color={color}
-            />
-          ),
-        }}
-      />
-    </Tabs>
+        <Tabs.Screen
+          name="chatbot"
+          options={{
+            title: "ChatBot",
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon
+                name={focused ? "laptop" : "laptop-outline"}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="news"
+          options={{
+            title: "News",
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon
+                name={focused ? "newspaper" : "newspaper-outline"}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="trivia"
+          options={{
+            title: "Trivia",
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon
+                name={focused ? "game-controller" : "game-controller-outline"}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="simulator"
+          options={{
+            title: "Simulator",
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon
+                name={focused ? "trending-up" : "trending-up-outline"}
+                color={color}
+              />
+            ),
+          }}
+        />
+      </Tabs>
     </ExpenseTrackerProvider>
   );
 }
