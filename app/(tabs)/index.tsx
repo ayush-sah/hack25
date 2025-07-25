@@ -18,37 +18,6 @@ import { Feather } from "@expo/vector-icons";
 import { useAuth } from "@/context/context";
 import axios from "axios";
 
-const tileData = [
-  {
-    id: "1",
-    title: "Understanding Dementia",
-    image: require("../../assets/images/understanding-dementia.png"),
-    description:
-      "Dementia is an umbrella term for a range of progressive conditions that affect the brain.\n\nEach type of dementia stops a person’s brain cells (neurones) working properly in specific areas, affecting their ability to remember, think and speak.\n\nDoctors typically use the word ‘‘dementia’’ to describe common symptoms – such as memory loss, confusion, and problems with speech and understanding – that get worse over time.\n\nDementia can affect a person at any age but it’s more common in people over the age of 65.",
-  },
-  {
-    id: "2",
-    title: "Coping Strategies",
-    image: require("../../assets/images/coping-strategy.png"),
-    description:
-      "Caring for someone with dementia is demanding for caregivers, family, and the patient. Caregivers should educate themselves, seek support, and prioritize their health. They should set realistic goals, accept help, and practice self-care.\n\nFamily members can assist by communicating openly, offering practical and emotional support, and respecting the caregiver’s boundaries. Patients benefit from a routine, physical and social activity, cognitive exercises, and a safe environment. Staying hydrated and eating well are essential.\n\nSeeking professional help and planning for the future can improve overall care and quality of life for everyone involved.",
-  },
-  {
-    id: "3",
-    title: "Family Support",
-    image: require("../../assets/images/family-support.png"),
-    description:
-      "Family support is crucial in dementia care. Open communication among family members helps share responsibilities and manage expectations. Offering practical help, like running errands or attending appointments, can ease the caregiver's burden.\n\nEmotional support is also vital; listening and providing encouragement strengthens the caregiver's resilience. Respecting the primary caregiver’s boundaries and avoiding interference ensures a balanced approach.\n\nEducating oneself about dementia fosters empathy and understanding. Family members should also promote the patient's well-being by encouraging social interactions and maintaining routines.",
-  },
-  {
-    id: "4",
-    title: "Kids & Teens Corner",
-    image: require("../../assets/images/child-teens.png"),
-    description:
-      "Supporting children and young people with family members affected by dementia involves several key strategies. First, offer open and age-appropriate communication to help them understand the condition and its impact.\n\nEncourage them to express their feelings and provide emotional support through counseling or support groups. Educate them about dementia in a way they can grasp, and involve them in caregiving tasks if appropriate, to foster a sense of involvement and empowerment.\n\nCreating a stable routine and ensuring they have access to activities and hobbies can also help them manage stress.",
-  },
-];
-
 const { width } = Dimensions.get("window");
 const tileSize = (width - 32) / 2;
 
@@ -71,21 +40,17 @@ const HomeScreen = () => {
   // const bearerToken = ""; // Add your Gemini API key here
   // const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
-  
   //abc
-  const bearerToken =""; // Replace with your bearer Token
+  const bearerToken = "AIzaSyD6cJhxDKJSV90zYjPqq46FgFTQrSViLhU"; // Replace with your bearer Token
   const apiUrl =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-
-
 
   // Fetch a single finance tip when user logs in
   const fetchFinanceTip = React.useCallback(() => {
     setFinanceTip("");
     setTipLoading(true);
     const randomizer = Math.floor(Math.random() * 1000000);
-    const prompt =
-      `Give only one very short (1-2 line), practical tip that increases the financial knowledge of a layman. The tip should be creative, actionable, and easy to understand. Do not return a list or multiple tips, just one. (Session: ${randomizer}) Answer in English.`;
+    const prompt = `Give only one very short (1-2 line), practical tip that increases the financial knowledge of a layman. The tip should be creative, actionable, and easy to understand. Do not return a list or multiple tips, just one. (Session: ${randomizer}) Answer in English.`;
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -158,16 +123,6 @@ const HomeScreen = () => {
     cancelRegister();
   };
 
-  const handleEmergencyCall = () => {
-    Linking.openURL("tel:102");
-  };
-
-  const handleHospitalContact = () => {
-    Linking.openURL(
-      "https://www.google.com/maps/search/?api=1&query=hospitals"
-    );
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -176,7 +131,7 @@ const HomeScreen = () => {
           <View style={styles.headerLeft}>
             <Image source={logo} style={styles.logo} />
             <Text style={[styles.headerTitle, { color: "#DE3163" }]}>
-              Dementia Buddy
+              FinWorld
             </Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.headerButton}>
@@ -186,7 +141,7 @@ const HomeScreen = () => {
       </View>
       <View style={styles.container}>
         <FlatList
-          data={tileData}
+          data={[]} // Empty data as tileData is removed
           renderItem={renderTile}
           keyExtractor={(item) => item.id}
           numColumns={2}
@@ -229,20 +184,78 @@ const HomeScreen = () => {
         visible={tipModalVisible}
         onRequestClose={() => setTipModalVisible(false)}
       >
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.4)" }}>
-          <View style={{ backgroundColor: "#fff", borderRadius: 20, padding: 28, width: 340, alignItems: "center", shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 }}>
-            <View style={{ backgroundColor: '#e0f7fa', borderRadius: 50, padding: 16, marginBottom: 12 }}>
-              <Image source={require('../../assets/images/news-icon.png')} style={{ width: 40, height: 40 }} />
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.4)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: 20,
+              padding: 28,
+              width: 340,
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+              elevation: 8,
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: "#e0f7fa",
+                borderRadius: 50,
+                padding: 16,
+                marginBottom: 12,
+              }}
+            >
+              <Image
+                source={require("../../assets/images/news-icon.png")}
+                style={{ width: 40, height: 40 }}
+              />
             </View>
-            <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 10, color: "#008080", textAlign: 'center', letterSpacing: 0.5 }}>Finance Tip</Text>
+            <Text
+              style={{
+                fontSize: 22,
+                fontWeight: "bold",
+                marginBottom: 10,
+                color: "#008080",
+                textAlign: "center",
+                letterSpacing: 0.5,
+              }}
+            >
+              Finance Tip
+            </Text>
             {tipLoading ? (
-              <ActivityIndicator size="large" color="#008080" style={{ marginVertical: 24 }} />
+              <ActivityIndicator
+                size="large"
+                color="#008080"
+                style={{ marginVertical: 24 }}
+              />
             ) : (
-              <Text style={{ fontSize: 18, color: "#222", marginBottom: 24, textAlign: "center", fontWeight: '500', lineHeight: 26 }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  color: "#222",
+                  marginBottom: 24,
+                  textAlign: "center",
+                  fontWeight: "500",
+                  lineHeight: 26,
+                }}
+              >
                 {financeTip.split(/(\*[^*]+\*)/g).map((part, idx) => {
                   if (/^\*[^*]+\*$/.test(part)) {
                     return (
-                      <Text key={idx} style={{ fontWeight: 'bold', color: '#008080' }}>{part.slice(1, -1)}</Text>
+                      <Text
+                        key={idx}
+                        style={{ fontWeight: "bold", color: "#008080" }}
+                      >
+                        {part.slice(1, -1)}
+                      </Text>
                     );
                   }
                   return part;
@@ -250,33 +263,34 @@ const HomeScreen = () => {
               </Text>
             )}
             <TouchableOpacity
-              style={{ backgroundColor: "#008080", paddingHorizontal: 36, paddingVertical: 12, borderRadius: 24, shadowColor: '#008080', shadowOpacity: 0.18, shadowRadius: 6, elevation: 2 }}
+              style={{
+                backgroundColor: "#008080",
+                paddingHorizontal: 36,
+                paddingVertical: 12,
+                borderRadius: 24,
+                shadowColor: "#008080",
+                shadowOpacity: 0.18,
+                shadowRadius: 6,
+                elevation: 2,
+              }}
               onPress={() => setTipModalVisible(false)}
               activeOpacity={0.85}
               disabled={tipLoading}
             >
-              <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16, letterSpacing: 0.2 }}>Dismiss</Text>
+              <Text
+                style={{
+                  color: "#fff",
+                  fontWeight: "bold",
+                  fontSize: 16,
+                  letterSpacing: 0.2,
+                }}
+              >
+                Dismiss
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: "#008080" }]}
-          onPress={handleHospitalContact}
-        >
-          <Feather name="map-pin" size={24} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Hospital</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: "#DE3163" }]}
-          onPress={handleEmergencyCall}
-        >
-          <Feather name="phone-call" size={24} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Emergency</Text>
-        </TouchableOpacity>
-      </View>
-
     </SafeAreaView>
   );
 };
@@ -284,8 +298,6 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
-
 
     paddingTop: StatusBar.currentHeight || 0,
     backgroundColor: "#ECF0F1",
@@ -362,11 +374,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     alignItems: "center",
-
-
-
-
-
   },
   modalImage: {
     width: "100%",
