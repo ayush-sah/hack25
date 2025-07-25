@@ -13,6 +13,7 @@ import {
   Animated,
   Easing,
   Dimensions,
+  TextInput,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 
@@ -67,20 +68,35 @@ const NewsScreen = () => {
   const [hasMore, setHasMore] = useState(true);
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const loadMoreScale = useRef(new Animated.Value(1)).current;
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('finance');
+
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if(search==''){
+        setDebouncedSearch('finance');
+      }
+      else{
+        setDebouncedSearch(search);
+      }
+    }, 1000);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   useEffect(() => {
     setArticles([]);
     setPage(1);
     setHasMore(true);
     fetchArticles(1, true);
-  }, [selectedLanguage]);
+  }, [selectedLanguage, debouncedSearch]);
 
   const fetchArticles = async (pageToFetch: number, reset: boolean = false) => {
     if (reset) setLoading(true);
     else setLoadingMore(true);
     setError("");
     try {
-      const url = `${NEWS_API_URL}?q=finance&language=${selectedLanguage}&pageSize=${ARTICLES_PER_PAGE}&page=${pageToFetch}&apiKey=${NEWS_API_KEY}`;
+      const url = `${NEWS_API_URL}?q=${debouncedSearch}&language=${selectedLanguage}&pageSize=${ARTICLES_PER_PAGE}&page=${pageToFetch}&apiKey=${NEWS_API_KEY}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch news");
       const data = await response.json();
@@ -306,6 +322,13 @@ const NewsScreen = () => {
             ))}
           </Picker>
         </View>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search news..."
+          value={search}
+          onChangeText={setSearch}
+          placeholderTextColor="#888"
+        />
       </View>
       <View style={styles.contentContainer}>
         <Text style={styles.title}>{t.newsTitle}</Text>
@@ -519,6 +542,19 @@ const styles = StyleSheet.create({
   loadMoreText: {
     color: "#fff",
     fontWeight: "bold",
+    fontSize: 16,
+  },
+  searchInput: {
+    width: '100%',
+    height: 40,
+    borderColor: 'rgb(0, 128, 128)',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginTop: 12,
+    marginBottom: 4,
+    backgroundColor: '#f5f5f5',
+    color: '#222',
     fontSize: 16,
   },
 });
