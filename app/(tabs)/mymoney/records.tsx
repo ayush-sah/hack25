@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Alert, Dimensions } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { ExpenseTrackerContext } from '../../src/context/ExpenseTrackerContext';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function RecordsScreen() {
@@ -35,7 +35,7 @@ export default function RecordsScreen() {
 
     const parsedAmount = parseFloat(amount);
     const newRecord = {
-      id: uuidv4(),
+      id: 1,
       type,
       date: new Date().toISOString(),
       amount: parsedAmount,
