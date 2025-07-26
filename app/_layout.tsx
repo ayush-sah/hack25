@@ -13,6 +13,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider, useAuth } from "@/context/context";
 import LoginScreen from "@/components/login";
 import RegistrationScreen from "@/components/Registration";
+import { ExpenseTrackerProvider } from "./src/context/ExpenseTrackerContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -36,7 +37,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <AuthProvider>
-        <RootLayout2 />
+        <ExpenseTrackerProvider>
+          <RootLayout2 />
+        </ExpenseTrackerProvider>
       </AuthProvider>
     </ThemeProvider>
   );

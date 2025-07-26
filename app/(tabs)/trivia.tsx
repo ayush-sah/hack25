@@ -1032,7 +1032,14 @@ export default function TriviaGame() {
           <View style={styles.categoryIcon}>
             {categoryIcons[item.key](iconColor)}
           </View>
-          <ThemedText style={[styles.categoryText, { color: textColor }]}>
+          <ThemedText
+            style={[
+              styles.categoryText,
+              { color: textColor },
+              item.label.length > 15 && { fontSize: 15 },
+            ]}
+            numberOfLines={2}
+          >
             {item.label}
           </ThemedText>
         </TouchableOpacity>
@@ -1414,7 +1421,7 @@ const styles = StyleSheet.create({
     padding: 18,
     borderRadius: 14,
     margin: 8,
-    width: (SCREEN_WIDTH - 80) / 2 - 16,
+    width: (SCREEN_WIDTH - 60) / 2,
     alignItems: "center",
     elevation: 2,
     shadowColor: "#000",
@@ -1434,9 +1441,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   categoryText: {
-    fontSize: 18,
+    fontSize: 17,
     color: "#008080", // default teal, will be overridden inline if selected
     fontWeight: "bold",
+    textAlign: "center",
+    flexWrap: "wrap",
   },
   categoryRow: {
     flexDirection: "row",

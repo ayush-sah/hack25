@@ -2,17 +2,29 @@ import React, { useContext, useState, useEffect } from "react";
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   TextInput,
   StyleSheet,
   Alert,
-  Dimensions,
+  ScrollView,
+  SafeAreaView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { ExpenseTrackerContext } from "../../src/context/ExpenseTrackerContext";
 import uuid from "react-native-uuid";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, AntDesign } from "@expo/vector-icons";
+
+const CATEGORY_ICONS: { [key: string]: string } = {
+  Groceries: "🛒",
+  "Rent": "🏠",
+  Utilities: "💡",
+  "Transportation": "🚌",
+  "Entertainment": "🎬",
+  "Dining Out": "🍔",
+  Salary: "💰",
+  Freelance: "🧑‍💻",
+  Investments: "📈",
+};
 
 export default function BudgetsScreen() {
   const { state, dispatch } = useContext(ExpenseTrackerContext);
@@ -91,276 +103,431 @@ export default function BudgetsScreen() {
 
   if (state.categories.filter((c) => c.type === "expense").length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
-          Please add an expense category in the Categories tab to create
-          budgets.
-        </Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>
+            Please add an expense category in the Categories tab to create budgets.
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
-  const recentBudgets = state.budgets.slice(0, 5);
+  const totalBudget = state.budgets.reduce((sum, budget) => sum + budget.amount, 0);
+  const totalSpent = state.budgets.reduce((sum, budget) => sum + getBudgetSpending(budget), 0);
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={recentBudgets}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={
-          <>
-            <Text style={styles.title}>Budgets</Text>
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Your Budgets</Text>
-                {state.budgets.length > 5 && (
-                  <TouchableOpacity
-                    onPress={() =>
-                      Alert.alert(
-                        "Info",
-                        "Full budget list can be viewed in a detailed view (coming soon)."
-                      )
-                    }
-                  >
-                    <Text style={styles.viewMore}>View More</Text>
-                  </TouchableOpacity>
-                )}
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent}>
+        {/* Header Card */}
+        <View style={styles.headerCard}>
+          <Text style={styles.headerTitle}>📊 Your Budgets</Text>
+          <Text style={styles.totalBudget}>
+            Total Budget: ${totalBudget.toFixed(2)}
+          </Text>
+          <Text style={styles.totalSpent}>
+            Total Spent: ${totalSpent.toFixed(2)}
+          </Text>
+          <Text style={[
+            styles.remainingBudget,
+            totalSpent > totalBudget ? styles.overBudget : styles.withinBudget
+          ]}>
+            Remaining: ${(totalBudget - totalSpent).toFixed(2)}
+          </Text>
+        </View>
+
+        {/* Budgets List */}
+        <View style={styles.budgetsCard}>
+          <Text style={styles.sectionTitle}>🎯 Budget Overview</Text>
+          {state.budgets.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No budgets set yet.</Text>
+              <Text style={styles.emptySubtext}>Create your first budget to start tracking!</Text>
+            </View>
+          ) : (
+            state.budgets.map((item) => {
+              const category = state.categories.find((c) => c.id === item.categoryId);
+              const spent = getBudgetSpending(item);
+              const isOverBudget = spent > item.amount;
+              const progress = Math.min((spent / item.amount) * 100, 100);
+              
+              return (
+                <TouchableOpacity 
+                  key={item.id} 
+                  style={styles.budgetItem}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.budgetHeader}>
+                    <View style={styles.categoryInfo}>
+                      <Text style={styles.categoryIcon}>
+                        {CATEGORY_ICONS[category?.name || ""] || "📁"}
+                      </Text>
+                      <Text style={styles.categoryName}>
+                        {category?.name || "Unknown"}
+                      </Text>
+                    </View>
+                    <Text style={styles.periodText}>
+                      {item.period.charAt(0).toUpperCase() + item.period.slice(1)}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.budgetDetails}>
+                    <View style={styles.budgetRow}>
+                      <Text style={styles.budgetLabel}>Budget:</Text>
+                      <Text style={styles.budgetAmount}>${item.amount.toFixed(2)}</Text>
+                    </View>
+                    <View style={styles.budgetRow}>
+                      <Text style={styles.budgetLabel}>Spent:</Text>
+                      <Text style={[
+                        styles.budgetAmount,
+                        isOverBudget ? styles.overBudgetText : styles.withinBudgetText
+                      ]}>
+                        ${spent.toFixed(2)}
+                      </Text>
+                    </View>
+                    <View style={styles.budgetRow}>
+                      <Text style={styles.budgetLabel}>Remaining:</Text>
+                      <Text style={[
+                        styles.budgetAmount,
+                        isOverBudget ? styles.overBudgetText : styles.withinBudgetText
+                      ]}>
+                        ${(item.amount - spent).toFixed(2)}
+                      </Text>
+                    </View>
+                  </View>
+                  
+                  {/* Progress Bar */}
+                  <View style={styles.progressContainer}>
+                    <View style={styles.progressBar}>
+                      <View 
+                        style={[
+                          styles.progressFill,
+                          { width: `${progress}%` },
+                          isOverBudget ? styles.progressOverBudget : styles.progressWithinBudget
+                        ]} 
+                      />
+                    </View>
+                    <Text style={styles.progressText}>{progress.toFixed(1)}%</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </View>
+
+        {/* Add Budget Form */}
+        {showForm && (
+          <View style={styles.formCard}>
+            <View style={styles.formHeader}>
+              <Text style={styles.sectionTitle}>➕ Add New Budget</Text>
+              <TouchableOpacity onPress={() => setShowForm(false)} activeOpacity={0.7}>
+                <Ionicons name="close" size={24} color="#008080" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.formRow}>
+              <Text style={styles.label}>Amount</Text>
+              <TextInput
+                placeholder="e.g., 500.00"
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="decimal-pad"
+                style={styles.input}
+                placeholderTextColor="#999"
+              />
+            </View>
+            
+            <View style={styles.formRow}>
+              <Text style={styles.label}>Period</Text>
+              <View style={styles.pickerWrap}>
+                <Picker
+                  selectedValue={period}
+                  onValueChange={(itemValue) => setPeriod(itemValue)}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="📅 Monthly" value="monthly" />
+                  <Picker.Item label="📆 Weekly" value="weekly" />
+                </Picker>
               </View>
             </View>
-          </>
-        }
-        renderItem={({ item }) => {
-          const category = state.categories.find(
-            (c) => c.id === item.categoryId
-          );
-          const spent = getBudgetSpending(item);
-          const isOverBudget = spent > item.amount;
-          return (
-            <View
-              style={[
-                styles.budgetItem,
-                isOverBudget ? styles.overBudget : styles.withinBudget,
-              ]}
-            >
-              <Text style={styles.budgetText}>
-                Category: {category?.name || "Unknown"}
-              </Text>
-              <Text style={styles.budgetText}>
-                Budget: ${item.amount.toFixed(2)} ({item.period})
-              </Text>
-              <Text style={styles.budgetText}>Spent: ${spent.toFixed(2)}</Text>
-              <Text style={styles.budgetText}>
-                Remaining: ${(item.amount - spent).toFixed(2)}
-              </Text>
+            
+            <View style={styles.formRow}>
+              <Text style={styles.label}>Category</Text>
+              <View style={styles.pickerWrap}>
+                <Picker
+                  selectedValue={selectedCategory}
+                  onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+                  style={styles.picker}
+                  enabled={state.categories.filter((c) => c.type === "expense").length > 0}
+                >
+                  {state.categories.filter((c) => c.type === "expense").length === 0 ? (
+                    <Picker.Item label="No expense categories available" value="" />
+                  ) : (
+                    state.categories
+                      .filter((c) => c.type === "expense")
+                      .map((category) => (
+                        <Picker.Item
+                          key={category.id}
+                          label={`${CATEGORY_ICONS[category.name] || "📁"} ${category.name}`}
+                          value={category.id}
+                        />
+                      ))
+                  )}
+                </Picker>
+              </View>
             </View>
-          );
-        }}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No budgets set yet.</Text>
-        }
-        contentContainerStyle={styles.listContent}
-      />
-      {showForm && (
-        <View style={styles.formContainer}>
-          <View style={styles.formHeader}>
-            <Text style={styles.sectionTitle}>Add Budget</Text>
-            <TouchableOpacity onPress={() => setShowForm(false)}>
-              <Ionicons name="close" size={24} color="#333" />
-            </TouchableOpacity>
+            
+            <View style={styles.addButtonContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.addButton,
+                  (!amount ||
+                    !selectedCategory ||
+                    isNaN(parseFloat(amount)) ||
+                    parseFloat(amount) <= 0) &&
+                    styles.addButtonDisabled,
+                ]}
+                onPress={addBudget}
+                disabled={
+                  !amount ||
+                  !selectedCategory ||
+                  isNaN(parseFloat(amount)) ||
+                  parseFloat(amount) <= 0
+                }
+                activeOpacity={0.7}
+              >
+                <AntDesign name="pluscircle" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.addButtonText}>Add Budget</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <TextInput
-            placeholder="Amount (e.g., 100)"
-            value={amount}
-            onChangeText={setAmount}
-            keyboardType="decimal-pad"
-            style={styles.input}
-            placeholderTextColor="#999"
-          />
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={period}
-              onValueChange={(itemValue) => setPeriod(itemValue)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Monthly" value="monthly" />
-              <Picker.Item label="Weekly" value="weekly" />
-            </Picker>
-          </View>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={selectedCategory}
-              onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-              style={styles.picker}
-              enabled={
-                state.categories.filter((c) => c.type === "expense").length > 0
-              }
-            >
-              {state.categories.filter((c) => c.type === "expense").length ===
-              0 ? (
-                <Picker.Item label="No expense categories available" value="" />
-              ) : (
-                state.categories
-                  .filter((c) => c.type === "expense")
-                  .map((category) => (
-                    <Picker.Item
-                      key={category.id}
-                      label={category.name}
-                      value={category.id}
-                    />
-                  ))
-              )}
-            </Picker>
-          </View>
-          <TouchableOpacity
-            style={[
-              styles.addButton,
-              (!amount ||
-                !selectedCategory ||
-                isNaN(parseFloat(amount)) ||
-                parseFloat(amount) <= 0) &&
-                styles.addButtonDisabled,
-            ]}
-            onPress={addBudget}
-            disabled={
-              !amount ||
-              !selectedCategory ||
-              isNaN(parseFloat(amount)) ||
-              parseFloat(amount) <= 0
-            }
-          >
-            <Text style={styles.addButtonText}>Add Budget</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        )}
+      </ScrollView>
+      
+      {/* Floating Action Button */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => setShowForm(!showForm)}
+        activeOpacity={0.8}
       >
         <Ionicons name={showForm ? "close" : "add"} size={24} color="#fff" />
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#fff",
   },
-  listContent: {
-    paddingBottom: 80, // Space for FAB
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 100,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#333",
-    marginVertical: 16,
-    textAlign: "center",
-  },
-  sectionContainer: {
-    marginBottom: 8,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  headerCard: {
+    backgroundColor: "#F8F9FB",
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 18,
+    elevation: 3,
+    shadowColor: "#008080",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
     alignItems: "center",
-    marginBottom: 8,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#008080",
+    marginBottom: 12,
+  },
+  totalBudget: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#4CAF50",
+    marginBottom: 4,
+  },
+  totalSpent: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#FF9800",
+    marginBottom: 4,
+  },
+  remainingBudget: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  withinBudget: {
+    color: "#4CAF50",
+  },
+  overBudget: {
+    color: "#F44336",
+  },
+  budgetsCard: {
+    backgroundColor: "#F8F9FB",
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 18,
+    elevation: 3,
+    shadowColor: "#008080",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "500",
-    color: "#333",
-  },
-  viewMore: {
-    fontSize: 14,
-    color: "#007AFF",
-    fontWeight: "500",
+    fontWeight: "bold",
+    color: "#DE3163",
+    marginBottom: 16,
+    textAlign: "center",
   },
   budgetItem: {
     backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 2,
   },
-  overBudget: {
-    borderLeftWidth: 4,
-    borderLeftColor: "#FF6B6B",
-    backgroundColor: "#ffe6e6",
-  },
-  withinBudget: {
-    borderLeftWidth: 4,
-    borderLeftColor: "#4ECDC4",
-  },
-  budgetText: {
-    fontSize: 14,
-    color: "#333",
-    marginBottom: 4,
-  },
-  formContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-    maxHeight: Dimensions.get("window").height * 0.5,
-  },
-  formHeader: {
+  budgetHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    marginBottom: 8,
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    fontSize: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+  categoryInfo: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  pickerContainer: {
+  categoryIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  categoryName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  periodText: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "500",
+  },
+  budgetDetails: {
+    marginBottom: 12,
+  },
+  budgetRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  budgetLabel: {
+    fontSize: 14,
+    color: "#666",
+  },
+  budgetAmount: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  withinBudgetText: {
+    color: "#4CAF50",
+  },
+  overBudgetText: {
+    color: "#F44336",
+  },
+  progressContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  progressBar: {
+    flex: 1,
+    height: 8,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 4,
+    marginRight: 8,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 4,
+  },
+  progressWithinBudget: {
+    backgroundColor: "#4CAF50",
+  },
+  progressOverBudget: {
+    backgroundColor: "#F44336",
+  },
+  progressText: {
+    fontSize: 12,
+    color: "#666",
+    fontWeight: "500",
+    minWidth: 40,
+  },
+  formCard: {
+    backgroundColor: "#F8F9FB",
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 18,
+    elevation: 3,
+    shadowColor: "#008080",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+  },
+  formHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  formRow: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 15,
+    color: "#008080",
     marginBottom: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
+    fontWeight: "bold",
+  },
+  input: {
     backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#bdbdbd",
+    fontSize: 14,
+    minHeight: 48,
+  },
+  pickerWrap: {
+    borderWidth: 1,
+    borderColor: "#bdbdbd",
+    borderRadius: 8,
+    backgroundColor: "#fff",
     elevation: 1,
+    minHeight: 48,
   },
   picker: {
-    fontSize: 14,
+    height: 48,
+    width: "100%",
+  },
+  addButtonContainer: {
+    alignItems: "center",
+    marginTop: 10,
   },
   addButton: {
-    backgroundColor: "#007AFF",
-    padding: 12,
-    borderRadius: 8,
+    flexDirection: "row",
+    backgroundColor: "#008080",
+    padding: 16,
+    borderRadius: 10,
     alignItems: "center",
-    marginTop: 8,
+    justifyContent: "center",
+    minWidth: 200,
+    minHeight: 48,
   },
   addButtonDisabled: {
     backgroundColor: "#ccc",
@@ -368,13 +535,13 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "bold",
   },
   fab: {
     position: "absolute",
-    bottom: 16,
-    right: 16,
-    backgroundColor: "#007AFF",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "#008080",
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -387,14 +554,18 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   emptyText: {
     fontSize: 16,
     color: "#666",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#999",
     textAlign: "center",
   },
 });
