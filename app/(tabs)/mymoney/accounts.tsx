@@ -1,17 +1,18 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   TextInput,
   StyleSheet,
   Alert,
-  Dimensions,
+  ScrollView,
+  SafeAreaView,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { ExpenseTrackerContext } from "../../src/context/ExpenseTrackerContext";
 import uuid from "react-native-uuid";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, AntDesign } from "@expo/vector-icons";
 
 export default function AccountsScreen() {
   const { state, dispatch } = useContext(ExpenseTrackerContext);
@@ -20,22 +21,19 @@ export default function AccountsScreen() {
   const [currency, setCurrency] = useState("USD");
   const [showForm, setShowForm] = useState(false);
 
+  useEffect(() => {
+    setCurrency("USD");
+  }, []);
+
   function addAccount() {
     if (!name.trim()) {
       Alert.alert("Invalid Name", "Please enter a valid account name.");
       return;
     }
-    if (!balance || isNaN(parseFloat(balance)) || parseFloat(balance) < 0) {
+    if (!balance || isNaN(parseFloat(balance))) {
       Alert.alert(
         "Invalid Balance",
-        "Please enter a valid non-negative number for the balance (e.g., 100.00)."
-      );
-      return;
-    }
-    if (!currency.trim() || !/^[A-Z]{3}$/.test(currency.trim())) {
-      Alert.alert(
-        "Invalid Currency",
-        "Please enter a valid 3-letter currency code (e.g., USD)."
+        "Please enter a valid number for the initial balance."
       );
       return;
     }
@@ -44,7 +42,7 @@ export default function AccountsScreen() {
       id: uuid.v4(),
       name: name.trim(),
       balance: parseFloat(balance),
-      currency: currency.trim().toUpperCase(),
+      currency,
     };
 
     dispatch({ type: "ADD_ACCOUNT", payload: newAccount });
@@ -55,216 +53,289 @@ export default function AccountsScreen() {
     Alert.alert("Success", "Account added successfully!", [{ text: "OK" }]);
   }
 
-  const recentAccounts = state.accounts.slice(0, 5);
+  const totalBalance = state.accounts.reduce((sum, account) => sum + account.balance, 0);
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={recentAccounts}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={
-          <>
-            <Text style={styles.title}>Accounts</Text>
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Your Accounts</Text>
-                {state.accounts.length > 5 && (
-                  <TouchableOpacity
-                    onPress={() =>
-                      Alert.alert(
-                        "Info",
-                        "Full account list can be viewed in a detailed view (coming soon)."
-                      )
-                    }
-                  >
-                    <Text style={styles.viewMore}>View More</Text>
-                  </TouchableOpacity>
-                )}
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent}>
+        {/* Header Card */}
+        <View style={styles.headerCard}>
+          <Text style={styles.headerTitle}>🏦 Your Accounts</Text>
+          <Text style={styles.totalBalance}>
+            Total Balance: ${totalBalance.toFixed(2)}
+          </Text>
+          <Text style={styles.accountCount}>
+            {state.accounts.length} account{state.accounts.length !== 1 ? 's' : ''}
+          </Text>
+        </View>
+
+        {/* Accounts List */}
+        <View style={styles.accountsCard}>
+          <Text style={styles.sectionTitle}>💳 Account Overview</Text>
+          {state.accounts.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No accounts yet.</Text>
+              <Text style={styles.emptySubtext}>Add your first account to get started!</Text>
+            </View>
+          ) : (
+            state.accounts.map((account) => (
+              <TouchableOpacity 
+                key={account.id} 
+                style={styles.accountItem}
+                activeOpacity={0.7}
+              >
+                <View style={styles.accountInfo}>
+                  <View style={styles.accountHeader}>
+                    <Text style={styles.accountName}>{account.name}</Text>
+                    <Text style={styles.accountCurrency}>{account.currency}</Text>
+                  </View>
+                  <Text style={[
+                    styles.accountBalance,
+                    account.balance >= 0 ? styles.positiveBalance : styles.negativeBalance
+                  ]}>
+                    {account.balance >= 0 ? "+" : ""}${account.balance.toFixed(2)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
+
+        {/* Add Account Form */}
+        {showForm && (
+          <View style={styles.formCard}>
+            <View style={styles.formHeader}>
+              <Text style={styles.sectionTitle}>➕ Add New Account</Text>
+              <TouchableOpacity onPress={() => setShowForm(false)} activeOpacity={0.7}>
+                <Ionicons name="close" size={24} color="#008080" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.formRow}>
+              <Text style={styles.label}>Account Name</Text>
+              <TextInput
+                placeholder="e.g., Chase Bank"
+                value={name}
+                onChangeText={setName}
+                style={styles.input}
+                placeholderTextColor="#999"
+              />
+            </View>
+            
+            <View style={styles.formRow}>
+              <Text style={styles.label}>Initial Balance</Text>
+              <TextInput
+                placeholder="e.g., 1000.00"
+                value={balance}
+                onChangeText={setBalance}
+                keyboardType="decimal-pad"
+                style={styles.input}
+                placeholderTextColor="#999"
+              />
+            </View>
+            
+            <View style={styles.formRow}>
+              <Text style={styles.label}>Currency</Text>
+              <View style={styles.pickerWrap}>
+                <Picker
+                  selectedValue={currency}
+                  onValueChange={(itemValue) => setCurrency(itemValue)}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="💵 USD" value="USD" />
+                  <Picker.Item label="💶 EUR" value="EUR" />
+                  <Picker.Item label="💷 GBP" value="GBP" />
+                  <Picker.Item label="💴 JPY" value="JPY" />
+                  <Picker.Item label="💸 INR" value="INR" />
+                </Picker>
               </View>
             </View>
-          </>
-        }
-        renderItem={({ item }) => (
-          <View style={styles.accountItem}>
-            <Text style={styles.accountText}>{item.name}</Text>
-            <Text style={styles.accountBalance}>
-              {item.balance < 0 ? "-" : ""}${Math.abs(item.balance).toFixed(2)}{" "}
-              {item.currency}
-            </Text>
+            
+            <View style={styles.addButtonContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.addButton,
+                  (!name.trim() || !balance || isNaN(parseFloat(balance))) &&
+                    styles.addButtonDisabled,
+                ]}
+                onPress={addAccount}
+                disabled={!name.trim() || !balance || isNaN(parseFloat(balance))}
+                activeOpacity={0.7}
+              >
+                <AntDesign name="pluscircle" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.addButtonText}>Add Account</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No accounts added yet.</Text>
-        }
-        contentContainerStyle={styles.listContent}
-      />
-      {showForm && (
-        <View style={styles.formContainer}>
-          <View style={styles.formHeader}>
-            <Text style={styles.sectionTitle}>Add Account</Text>
-            <TouchableOpacity onPress={() => setShowForm(false)}>
-              <Ionicons name="close" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
-          <TextInput
-            placeholder="Account Name (e.g., Savings)"
-            value={name}
-            onChangeText={setName}
-            style={styles.input}
-            placeholderTextColor="#999"
-          />
-          <TextInput
-            placeholder="Initial Balance (e.g., 100.00)"
-            value={balance}
-            onChangeText={setBalance}
-            keyboardType="decimal-pad"
-            style={styles.input}
-            placeholderTextColor="#999"
-          />
-          <TextInput
-            placeholder="Currency (e.g., USD)"
-            value={currency}
-            onChangeText={setCurrency}
-            style={styles.input}
-            placeholderTextColor="#999"
-          />
-          <TouchableOpacity
-            style={[
-              styles.addButton,
-              (!name.trim() ||
-                !balance ||
-                isNaN(parseFloat(balance)) ||
-                parseFloat(balance) < 0 ||
-                !currency.trim() ||
-                !/^[A-Z]{3}$/.test(currency.trim())) &&
-                styles.addButtonDisabled,
-            ]}
-            onPress={addAccount}
-            disabled={
-              !name.trim() ||
-              !balance ||
-              isNaN(parseFloat(balance)) ||
-              parseFloat(balance) < 0 ||
-              !currency.trim() ||
-              !/^[A-Z]{3}$/.test(currency.trim())
-            }
-          >
-            <Text style={styles.addButtonText}>Add Account</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      </ScrollView>
+      
+      {/* Floating Action Button */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => setShowForm(!showForm)}
+        activeOpacity={0.8}
       >
         <Ionicons name={showForm ? "close" : "add"} size={24} color="#fff" />
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#fff",
   },
-  listContent: {
-    paddingBottom: 80, // Space for FAB
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 100,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#333",
-    marginVertical: 16,
-    textAlign: "center",
-  },
-  sectionContainer: {
-    marginBottom: 8,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  headerCard: {
+    backgroundColor: "#F8F9FB",
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 18,
+    elevation: 3,
+    shadowColor: "#008080",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
     alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#008080",
     marginBottom: 8,
+  },
+  totalBalance: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#4CAF50",
+    marginBottom: 4,
+  },
+  accountCount: {
+    fontSize: 14,
+    color: "#666",
+  },
+  accountsCard: {
+    backgroundColor: "#F8F9FB",
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 18,
+    elevation: 3,
+    shadowColor: "#008080",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "500",
-    color: "#333",
-  },
-  viewMore: {
-    fontSize: 14,
-    color: "#007AFF",
-    fontWeight: "500",
+    fontWeight: "bold",
+    color: "#DE3163",
+    marginBottom: 16,
+    textAlign: "center",
   },
   accountItem: {
     backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 2,
+    minHeight: 60,
+  },
+  accountInfo: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  accountText: {
-    fontSize: 14,
+  accountHeader: {
+    flex: 1,
+  },
+  accountName: {
+    fontSize: 16,
+    fontWeight: "600",
     color: "#333",
+    marginBottom: 4,
+  },
+  accountCurrency: {
+    fontSize: 14,
+    color: "#666",
   },
   accountBalance: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#333",
+    fontSize: 18,
+    fontWeight: "bold",
   },
-  formContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.2,
+  positiveBalance: {
+    color: "#4CAF50",
+  },
+  negativeBalance: {
+    color: "#F44336",
+  },
+  formCard: {
+    backgroundColor: "#F8F9FB",
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 18,
+    elevation: 3,
+    shadowColor: "#008080",
+    shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 5,
-    maxHeight: Dimensions.get("window").height * 0.5,
   },
   formHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 16,
+  },
+  formRow: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 15,
+    color: "#008080",
+    marginBottom: 8,
+    fontWeight: "bold",
   },
   input: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 12,
     borderWidth: 1,
-    borderColor: "#ccc",
-    marginBottom: 8,
-    padding: 10,
+    borderColor: "#bdbdbd",
+    fontSize: 14,
+    minHeight: 48,
+  },
+  pickerWrap: {
+    borderWidth: 1,
+    borderColor: "#bdbdbd",
     borderRadius: 8,
     backgroundColor: "#fff",
-    fontSize: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
     elevation: 1,
+    minHeight: 48,
+  },
+  picker: {
+    height: 48,
+    width: "100%",
+  },
+  addButtonContainer: {
+    alignItems: "center",
+    marginTop: 10,
   },
   addButton: {
-    backgroundColor: "#007AFF",
-    padding: 12,
-    borderRadius: 8,
+    flexDirection: "row",
+    backgroundColor: "#008080",
+    padding: 16,
+    borderRadius: 10,
     alignItems: "center",
-    marginTop: 8,
+    justifyContent: "center",
+    minWidth: 200,
+    minHeight: 48,
   },
   addButtonDisabled: {
     backgroundColor: "#ccc",
@@ -272,13 +343,13 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "bold",
   },
   fab: {
     position: "absolute",
-    bottom: 16,
-    right: 16,
-    backgroundColor: "#007AFF",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "#008080",
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -291,14 +362,18 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   emptyText: {
     fontSize: 16,
     color: "#666",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#999",
     textAlign: "center",
   },
 });

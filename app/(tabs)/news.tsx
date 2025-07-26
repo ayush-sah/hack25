@@ -19,6 +19,7 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { useAuth } from "../../context/context";
 import axios from "axios";
+import { Ionicons } from '@expo/vector-icons';
 
 const languages = [
   { label: "German", value: "de" },
@@ -77,6 +78,7 @@ const NewsScreen = () => {
   const [tipModalVisible, setTipModalVisible] = useState(false);
   const [financeTip, setFinanceTip] = useState("");
   const [tipLoading, setTipLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Gemini API config
   const bearerToken = "AIzaSyD6cJhxDKJSV90zYjPqq46FgFTQrSViLhU"; // Replace with your Gemini API key
@@ -209,32 +211,44 @@ const NewsScreen = () => {
     );
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchArticles(1, true);
+    setRefreshing(false);
+  };
+
   const renderArticle = ({ item }: { item: Article }) => (
-    <TouchableOpacity
-      style={styles.articleRow}
-      onPress={() => openUrl(item.url)}
-    >
-      {item.urlToImage ? (
-        <Image source={{ uri: item.urlToImage }} style={styles.articleImage} />
-      ) : (
-        <View style={styles.imagePlaceholder} />
-      )}
-      <View style={styles.articleContent}>
-        <Text style={styles.articleTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <Text style={styles.articleDescription} numberOfLines={3}>
-          {item.description
-            ? item.description.slice(0, 100) +
-              (item.description.length > 100 ? "..." : "")
-            : "No description available."}
-        </Text>
-        <Text style={styles.articleMeta}>
-          {item.author ? `By ${item.author} • ` : ""}
-          {new Date(item.publishedAt).toLocaleDateString()}
-        </Text>
-      </View>
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity
+        style={styles.articleRow}
+        onPress={() => openUrl(item.url)}
+        activeOpacity={0.85}
+      >
+        {item.urlToImage ? (
+          <Image source={{ uri: item.urlToImage }} style={styles.articleImage} />
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <Ionicons name="newspaper-outline" size={36} color="#bdbdbd" />
+          </View>
+        )}
+        <View style={styles.articleContent}>
+          <Text style={styles.articleTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <Text style={styles.articleDescription} numberOfLines={3}>
+            {item.description
+              ? item.description.slice(0, 100) +
+                (item.description.length > 100 ? "..." : "")
+              : "No description available."}
+          </Text>
+          <Text style={styles.articleMeta}>
+            {item.author ? `By ${item.author} • ` : ""}
+            {new Date(item.publishedAt).toLocaleDateString()}
+          </Text>
+        </View>
+      </TouchableOpacity>
+      <View style={styles.articleDivider} />
+    </>
   );
 
   const translations: Record<
@@ -363,7 +377,7 @@ const NewsScreen = () => {
   return (
     <View style={styles.gradientBg}>
       {/* Finance Tip Modal */}
-      {/* <Modal
+      <Modal
         animationType="slide"
         transparent={true}
         visible={tipModalVisible}
@@ -475,7 +489,7 @@ const NewsScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </Modal> */}
+      </Modal>
       <View style={styles.bannerContainer}>
         <Image
           source={require("../../assets/images/news-icon.png")}
@@ -526,6 +540,8 @@ const NewsScreen = () => {
             keyExtractor={(item, idx) => item.url + idx}
             contentContainerStyle={styles.articlesList}
             showsVerticalScrollIndicator={false}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             ListFooterComponent={
               hasMore ? (
                 loadingMore ? (
@@ -541,7 +557,7 @@ const NewsScreen = () => {
                     <TouchableOpacity
                       style={styles.loadMoreBtn}
                       onPress={handleLoadMore}
-                      activeOpacity={0.8}
+                      activeOpacity={0.9}
                     >
                       <Text style={styles.loadMoreText}>Load More</Text>
                     </TouchableOpacity>
@@ -678,18 +694,20 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   articleImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 8,
-    marginRight: 12,
+    width: 90,
+    height: 90,
+    borderRadius: 12,
+    marginRight: 16,
     backgroundColor: "#e0e0e0",
   },
   imagePlaceholder: {
-    width: 70,
-    height: 70,
-    borderRadius: 8,
-    marginRight: 12,
+    width: 90,
+    height: 90,
+    borderRadius: 12,
+    marginRight: 16,
     backgroundColor: "#e0e0e0",
+    justifyContent: "center",
+    alignItems: "center",
   },
   articleContent: {
     flex: 1,
@@ -713,15 +731,20 @@ const styles = StyleSheet.create({
   loadMoreBtn: {
     marginVertical: 20,
     alignSelf: "center",
-    backgroundColor: "rgb(0, 128, 128)",
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 24,
+    backgroundColor: "#008080",
+    paddingHorizontal: 40,
+    paddingVertical: 16,
+    borderRadius: 28,
+    shadowColor: "#008080",
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 2,
   },
   loadMoreText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 18,
+    letterSpacing: 0.2,
   },
   searchInput: {
     width: "100%",
@@ -735,6 +758,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     color: "#222",
     fontSize: 16,
+  },
+  articleDivider: {
+    height: 1,
+    backgroundColor: "#e0e0e0",
+    width: "90%",
+    alignSelf: "center",
+    marginVertical: 2,
   },
 });
 

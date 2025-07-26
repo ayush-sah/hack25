@@ -45,7 +45,9 @@ type Action =
   | { type: "ADD_ACCOUNT"; payload: Account }
   | { type: "UPDATE_ACCOUNT"; payload: Account }
   | { type: "ADD_CATEGORY"; payload: Category }
-  | { type: "ADD_BUDGET"; payload: Budget };
+  | { type: "ADD_BUDGET"; payload: Budget }
+  | { type: "DELETE_CATEGORY"; payload: string }
+  | { type: "UPDATE_RECORDS"; payload: Record[] };
 
 // Initial data
 const initialCategories: Category[] = [
@@ -91,6 +93,19 @@ const reducer = (state: State, action: Action): State => {
       return { ...state, categories: [...state.categories, action.payload] };
     case "ADD_BUDGET":
       return { ...state, budgets: [...state.budgets, action.payload] };
+    case "DELETE_CATEGORY":
+      return {
+        ...state,
+        categories: state.categories.filter((cat) => cat.id !== action.payload),
+        // Optionally, remove records and budgets associated with this category:
+        records: state.records.filter((rec) => rec.categoryId !== action.payload),
+        budgets: state.budgets.filter((bud) => bud.categoryId !== action.payload),
+      };
+    case "UPDATE_RECORDS":
+      return {
+        ...state,
+        records: action.payload,
+      };
     default:
       return state;
   }
@@ -102,6 +117,7 @@ interface ExpenseTrackerContextType {
   dispatch: React.Dispatch<Action>;
 }
 
+export type { Category, Record };
 export const ExpenseTrackerContext = createContext<ExpenseTrackerContextType>({
   state: initialState,
   dispatch: () => null,

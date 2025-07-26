@@ -1,16 +1,24 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Text } from 'react-native';
 
 export default function MyMoneyLayout() {
   return (
     <Tabs
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: '#007AFF', // Active tint color
-        tabBarInactiveTintColor: 'gray',  // Inactive tint color
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: 'gray',
         headerShown: true,
+        tabBarShowLabel: true,
+        tabBarLabelPosition: 'below-icon',
+        tabBarLabelStyle: {
+          fontSize: 12,
+          marginTop: 2,
+          marginBottom: 4,
+        },
         tabBarIcon: ({ color, focused, size }) => {
-          let iconName = '';
+          let iconName: keyof typeof Ionicons.glyphMap = 'ellipse';
 
           switch (route.name) {
             case 'records':
