@@ -146,9 +146,8 @@ export default function DateDetailsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={{ padding: 4, marginRight: 8, zIndex: 2 }}>
           <Ionicons name="arrow-back" size={26} color="#008080" />
         </TouchableOpacity>
-        <View style={{ flex: 1 }} />
+        <Text style={styles.headerDate}>{formattedDate}</Text>
       </View>
-      <Text style={styles.dateSubtitle}>{formattedDate}</Text>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent}>
         {/* Entry Card */}
         <View style={styles.entryCard}>
@@ -249,6 +248,15 @@ const styles = StyleSheet.create({
   dateSubtitle: { color: "#008080", fontWeight: "bold", fontSize: 18, marginBottom: 12, textAlign: "center" },
   headerBar: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", paddingVertical: 8, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: "#BDC3C7", position: "relative", width: "100%" },
   headerTitle: { position: "absolute", left: 0, right: 0, textAlign: "center", fontSize: 22, fontWeight: "bold", color: "#008080", marginTop: 0, marginBottom: 0, zIndex: 1 },
+  headerDate: {
+    position: "absolute",
+    right: 0,
+    fontSize: 16,
+    color: "#008080",
+    fontWeight: "bold",
+    marginRight: 10,
+    zIndex: 2,
+  },
   entryCard: { width: "100%", backgroundColor: "#F8F9FB", borderRadius: 18, padding: 20, marginBottom: 18, elevation: 3, shadowColor: "#008080", shadowOpacity: 0.08, shadowRadius: 4, alignSelf: "stretch" },
   tableCard: { width: "100%", backgroundColor: "#F8F9FB", borderRadius: 18, padding: 20, marginBottom: 18, elevation: 3, shadowColor: "#008080", shadowOpacity: 0.08, shadowRadius: 4, alignSelf: "stretch" },
   sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#DE3163", marginBottom: 10, textAlign: "center", width: "100%" },
